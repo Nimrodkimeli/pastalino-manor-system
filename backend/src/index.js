@@ -65,8 +65,10 @@ app.use("/api/visitors", visitorRoutes);
 
 app.get("/api/status", (req, res) => res.json({ status: "ok", version: "1.0" }));
 
+console.log("Initializing database...");
 initData()
   .then(() => {
+    console.log("Database initialized successfully");
     app.listen(PORT, () => {
       console.log(`Backend running on http://localhost:${PORT}`);
       startReminderScheduler();
@@ -76,3 +78,4 @@ initData()
     console.error("Failed to initialize database:", err);
     process.exit(1);
   });
+
