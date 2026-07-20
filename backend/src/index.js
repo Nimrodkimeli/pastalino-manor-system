@@ -19,6 +19,8 @@ const policyRoutes = require("./routes/policies");
 const visitorRoutes = require("./routes/visitors");
 const { startReminderScheduler } = require("./services/reminderScheduler");
 const initData = require("./utils/initData");
+const bcrypt = require("bcrypt");
+const { db, get, run } = require("./db");
 
 const app = express();
 const PORT = process.env.PORT || 4000;
@@ -65,8 +67,52 @@ app.use("/api/visitors", visitorRoutes);
 
 app.get("/api/status", (req, res) => res.json({ status: "ok", version: "1.0" }));
 
+async function ensureTestUsers() {
+  try {
+    console.log("Checking for test users...");
+    const admin = await get("SELECT id FROM users WHERE email = ?", ["admin@pastalino.local"]);
+    
+    if (admin) {
+      console.log("✓ Test users already exist");
+      return;
+    }
+
+    console.log("Creating test users...");
+    
+    // Hash passwords
+    const adminHash = await bcrypt.hash("Admin123!", 10);
+    const staffHash = await bcrypt.hash("Staff123!", 10);
+
+    // Insert users
+    await run(
+      "INSERT INTO users (id, email, name, role, passwordHash, createdAt) VALUES (?, ?, ?, ?, ?, ?)",
+      ["user-admin-1", "admin@pastalino.local", "Admin User", "admin", adminHash, Date.now()]
+    );
+
+    await run(
+      "INSERT INTO users (id, email, name, role, passwordHash, createdAt) VALUES (?, ?, ?, ?, ?, ?)",
+      ["user-staff-1", "beth@pastalino.local", "Beth Carter", "staff", staffHash, Date.now()]
+    );
+
+    await run(
+      "INSERT INTO users (id, email, name, role, passwordHash, createdAt) VALUES (?, ?, ?, ?, ?, ?)",
+      ["user-staff-2", "mike@pastalino.local", "Mike Alvarez", "staff", staffHash, Date.now()]
+    );
+
+    console.log("✓ Test users created:");
+    console.log("  - admin@pastalino.local / Admin123!");
+    console.log("  - beth@pastalino.local / Staff123!");
+    console.log("  - mike@pastalino.local / Staff123!");
+  } catch (err) {
+    console.error("Error ensuring test users:", err);
+  }
+}
+
 initData()
-  .then(() => {
+  .then(async () => {
+    console.log("Database initialized");
+    await ensureTestUsers();
+    
     app.listen(PORT, () => {
       console.log(`Backend running on http://localhost:${PORT}`);
       startReminderScheduler();
@@ -76,3 +122,4 @@ initData()
     console.error("Failed to initialize database:", err);
     process.exit(1);
   });
+
