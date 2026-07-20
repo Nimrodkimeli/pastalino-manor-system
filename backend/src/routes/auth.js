@@ -2,10 +2,20 @@ const express = require("express");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { body, validationResult } = require("express-validator");
-const { get, run } = require("../db");
+const { get, run, all } = require("../db");
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || "pastalino-secret";
+
+// Debug endpoint - list all users
+router.get("/debug/users", async (req, res) => {
+  try {
+    const users = await all("SELECT id, email, name, role FROM users");
+    res.json({ users, count: users.length });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 router.post(
   "/login",
@@ -17,12 +27,18 @@ router.post(
     }
 
     const { email, password } = req.body;
+    console.log(`Login attempt: ${email}`);
+    
     const user = await get("SELECT * FROM users WHERE email = ?", [email.toLowerCase()]);
+    console.log(`User found: ${user ? user.email : "none"}`);
+    
     if (!user) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
 
     const validPassword = await bcrypt.compare(password, user.passwordHash);
+    console.log(`Password valid: ${validPassword}`);
+    
     if (!validPassword) {
       return res.status(401).json({ message: "Invalid email or password." });
     }
@@ -118,3 +134,4 @@ router.post(
 );
 
 module.exports = router;
+
