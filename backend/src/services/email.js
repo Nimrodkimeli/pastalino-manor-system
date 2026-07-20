@@ -20,15 +20,56 @@ function createTransport() {
   });
 }
 
-async function sendStaffTemporaryPasswordEmail({ to, staffName, temporaryPassword }) {
+function getSmtpProviderStatus() {
+  return {
+    configured: hasSmtpConfig(),
+    host: process.env.SMTP_HOST || "",
+    port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : null,
+    secure: String(process.env.SMTP_SECURE || "false").toLowerCase() === "true",
+    from: process.env.SMTP_FROM || process.env.SMTP_USER || "",
+  };
+}
+
+async function verifySmtpConnection() {
   const transport = createTransport();
   if (!transport) {
-    return { sent: false, reason: "SMTP_NOT_CONFIGURED" };
+    return { success: false, reason: "SMTP_NOT_CONFIGURED" };
+  }
+
+  await transport.verify();
+
+  return {
+    success: true,
+    provider: "smtp",
+    ...getSmtpProviderStatus(),
+  };
+}
+
+async function sendMailMessage({ to, subject, text }) {
+  const transport = createTransport();
+  if (!transport) {
+    return { success: false, reason: "SMTP_NOT_CONFIGURED", channel: "email", to };
   }
 
   const from = process.env.SMTP_FROM || process.env.SMTP_USER;
-  await transport.sendMail({
+  const info = await transport.sendMail({
     from,
+    to,
+    subject,
+    text,
+  });
+
+  return {
+    success: true,
+    channel: "email",
+    to,
+    provider: "smtp",
+    providerId: info.messageId || null,
+  };
+}
+
+async function sendStaffTemporaryPasswordEmail({ to, staffName, temporaryPassword }) {
+  const result = await sendMailMessage({
     to,
     subject: "Pastalino Manor account approved - temporary password",
     text: [
@@ -41,9 +82,14 @@ async function sendStaffTemporaryPasswordEmail({ to, staffName, temporaryPasswor
     ].join("\n"),
   });
 
-  return { sent: true };
+  return { sent: result.success, reason: result.reason || null };
 }
 
 module.exports = {
+  createTransport,
+  getSmtpProviderStatus,
+  hasSmtpConfig,
+  sendMailMessage,
   sendStaffTemporaryPasswordEmail,
+  verifySmtpConnection,
 };

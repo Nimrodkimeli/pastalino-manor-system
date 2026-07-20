@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "migrate": "node src/utils/initData.js"
+    "migrate": "node src/utils/initData.js",
+    "notifications:verify": "node src/scripts/verifyNotifications.js",
+    "notifications:test": "node src/scripts/verifyNotifications.js --send"
   },
   "dependencies": {
     "bcrypt": "^5.1.0",
@@ -17,6 +19,7 @@
     "jsonwebtoken": "^9.0.1",
     "nodemailer": "^6.9.15",
     "sqlite3": "^5.1.6",
+    "twilio": "^6.0.2",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

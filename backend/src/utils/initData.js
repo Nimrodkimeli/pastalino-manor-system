@@ -198,11 +198,25 @@ async function createTables() {
       memberId TEXT NOT NULL,
       title TEXT NOT NULL,
       appointmentDate TEXT NOT NULL,
+      contactEmail TEXT,
+      contactPhone TEXT,
+      reminderChannels TEXT NOT NULL DEFAULT '[]',
+      reminderLeadHours INTEGER NOT NULL DEFAULT 24,
+      lastReminderSentAt INTEGER,
       location TEXT,
       notes TEXT,
       createdAt INTEGER NOT NULL
     )`
   );
+
+  await ensureColumn("appointments", "contactEmail", "TEXT");
+  await ensureColumn("appointments", "contactPhone", "TEXT");
+  await ensureColumn("appointments", "reminderChannels", "TEXT NOT NULL DEFAULT '[]'");
+  await ensureColumn("appointments", "reminderLeadHours", "INTEGER NOT NULL DEFAULT 24");
+  await ensureColumn("appointments", "lastReminderSentAt", "INTEGER");
+  await ensureColumn("appointments", "status", "TEXT NOT NULL DEFAULT 'scheduled'");
+  await ensureColumn("appointments", "updatedAt", "INTEGER");
+  await ensureColumn("appointments", "cancelledAt", "INTEGER");
 
   await run(
     `CREATE TABLE IF NOT EXISTS policies (

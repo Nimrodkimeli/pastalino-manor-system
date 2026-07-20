@@ -1,4 +1,4 @@
-require("dotenv").config();
+require("dotenv").config({ override: true });
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -17,6 +17,7 @@ const incidentRoutes = require("./routes/incidents");
 const appointmentRoutes = require("./routes/appointments");
 const policyRoutes = require("./routes/policies");
 const visitorRoutes = require("./routes/visitors");
+const { startReminderScheduler } = require("./services/reminderScheduler");
 const initData = require("./utils/initData");
 
 const app = express();
@@ -68,6 +69,7 @@ initData()
   .then(() => {
     app.listen(PORT, () => {
       console.log(`Backend running on http://localhost:${PORT}`);
+      startReminderScheduler();
     });
   })
   .catch((err) => {
