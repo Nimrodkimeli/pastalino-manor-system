@@ -67,12 +67,15 @@ app.get("/api/status", (req, res) => res.json({ status: "ok", version: "1.0" }))
 
 initData()
   .then(() => {
+    console.log("Database initialized successfully");
     app.listen(PORT, () => {
       console.log(`Backend running on http://localhost:${PORT}`);
       startReminderScheduler();
     });
   })
   .catch((err) => {
-    console.error("Failed to initialize database:", err);
+    console.error("Failed to initialize database:", err.message);
+    console.error("Full error:", err);
     process.exit(1);
   });
+
