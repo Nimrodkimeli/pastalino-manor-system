@@ -17,6 +17,7 @@ const incidentRoutes = require("./routes/incidents");
 const appointmentRoutes = require("./routes/appointments");
 const policyRoutes = require("./routes/policies");
 const visitorRoutes = require("./routes/visitors");
+const seedRoutes = require("./routes/seed");
 const { startReminderScheduler } = require("./services/reminderScheduler");
 const initData = require("./utils/initData");
 
@@ -62,17 +63,25 @@ app.use("/api/incidents", incidentRoutes);
 app.use("/api/appointments", appointmentRoutes);
 app.use("/api/policies", policyRoutes);
 app.use("/api/visitors", visitorRoutes);
+app.use("/api/seed", seedRoutes);
 
 app.get("/api/status", (req, res) => res.json({ status: "ok", version: "1.0" }));
 
+console.log("Starting database initialization...");
+console.log("DB_PATH:", process.env.DB_PATH || "default path");
+
 initData()
   .then(() => {
+    console.log("✓ Database initialized successfully");
     app.listen(PORT, () => {
-      console.log(`Backend running on http://localhost:${PORT}`);
+      console.log(`✓ Backend running on http://localhost:${PORT}`);
       startReminderScheduler();
     });
   })
   .catch((err) => {
-    console.error("Failed to initialize database:", err);
+    console.error("✗ Failed to initialize database");
+    console.error("Error message:", err.message);
+    console.error("Error stack:", err.stack);
     process.exit(1);
   });
+
