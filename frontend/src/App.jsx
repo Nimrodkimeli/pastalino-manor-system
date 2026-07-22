@@ -10,6 +10,7 @@ import NotesPage from "./pages/NotesPage";
 import FaceSheetPage from "./pages/FaceSheetPage";
 import ClientChatPage from "./pages/ClientChatPage";
 import ResetRequiredPage from "./pages/ResetRequiredPage";
+import FireDrillsPage from "./pages/FireDrillsPage";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import SideNav from "./components/SideNav";
 
@@ -56,6 +57,10 @@ function App() {
             <Route
               path="/reset-required"
               element={<ProtectedRoute component={ResetRequiredPage} />}
+            />
+            <Route
+              path="/fire-drills"
+              element={<ProtectedRoute component={FireDrillsPage} />}
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

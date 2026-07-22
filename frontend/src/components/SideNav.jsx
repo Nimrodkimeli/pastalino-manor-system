@@ -9,6 +9,7 @@ import BarChartIcon from "@mui/icons-material/BarChart";
 import EventNoteIcon from "@mui/icons-material/EventNote";
 import HealthAndSafetyIcon from "@mui/icons-material/HealthAndSafety";
 import PolicyIcon from "@mui/icons-material/Policy";
+import LocalFireDepartmentIcon from "@mui/icons-material/LocalFireDepartment";
 import MenuIcon from "@mui/icons-material/Menu";
 import { clearSession, getSession } from "../api";
 
@@ -23,6 +24,7 @@ const navItems = [
   { label: "Compliance", path: "/staff", icon: <HealthAndSafetyIcon /> },
   { label: "Appointments", path: "/notes", icon: <EventNoteIcon /> },
   { label: "Policies", path: "/reports", icon: <PolicyIcon /> },
+  { label: "Fire Drills", path: "/fire-drills", icon: <LocalFireDepartmentIcon /> },
 ];
 
 export default function SideNav({ children }) {

@@ -107,6 +107,19 @@ async function createTables() {
   );
 
   await run(
+    `CREATE TABLE IF NOT EXISTS fire_drills (
+      id TEXT PRIMARY KEY,
+      category TEXT NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      eventDate TEXT,
+      createdBy TEXT,
+      createdAt INTEGER NOT NULL,
+      updatedAt INTEGER NOT NULL
+    )`
+  );
+
+  await run(
     `CREATE TABLE IF NOT EXISTS chat_messages (
       id TEXT PRIMARY KEY,
       memberId TEXT NOT NULL,

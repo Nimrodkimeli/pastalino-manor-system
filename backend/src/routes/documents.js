@@ -35,7 +35,7 @@ router.get("/", async (req, res) => {
 
 router.post(
   "/",
-  [body("ownerType").isIn(["staff", "member"]), body("ownerId").notEmpty(), body("title").notEmpty()],
+  [body("ownerType").isIn(["staff", "member", "fire_drill"]), body("ownerId").notEmpty(), body("title").notEmpty()],
   async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {

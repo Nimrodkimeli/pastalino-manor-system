@@ -19,6 +19,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { openRecordPrintView } from "../utils/printRecord";
 
@@ -86,6 +87,7 @@ function appointmentToForm(appointment) {
 }
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
   const [censusEntries, setCensusEntries] = useState([]);
   const [members, setMembers] = useState([]);
@@ -276,6 +278,17 @@ export default function DashboardPage() {
       <Typography variant="h4" mb={3}>
         Dashboard
       </Typography>
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "flex-start", sm: "center" }} justifyContent="space-between">
+          <Box>
+            <Typography variant="h6">Fire Drills Folder</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Disaster plan review, client drills, staff drills, detector/filter checks, and uploaded previous fire drills.
+            </Typography>
+          </Box>
+          <Button variant="contained" onClick={() => navigate("/fire-drills")}>Open Fire Drills</Button>
+        </Stack>
+      </Paper>
       <Box
         sx={{
           display: "grid",
