@@ -1559,12 +1559,6 @@ export default function NotesPage() {
                   rows={3}
                   fullWidth
                 />
-                {aiDraft && (
-                  <Paper variant="outlined" sx={{ p: 2, backgroundColor: "#f8fafc" }}>
-                    <Typography variant="subtitle2" mb={1}>AI Generated Note</Typography>
-                    <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>{aiDraft}</Typography>
-                  </Paper>
-                )}
               </Box>
             )}
             <Box sx={{ borderTop: "1px solid #cbd5e1", pt: 2, mt: 2 }}>
