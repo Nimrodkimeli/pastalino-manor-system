@@ -946,6 +946,7 @@ export default function NotesPage() {
 
     const payload = {
       ...form,
+      title: (form.title || "").trim() || noteTypeLabelMap[form.type] || "Behavioral Health Note",
       content: structuredContent,
     };
 
