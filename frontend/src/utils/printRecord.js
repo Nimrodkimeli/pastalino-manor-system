@@ -178,9 +178,7 @@ export function openRecordPrintView({
   const metaLeftText = metaLeftLabel || metaLeftValue ? `${metaLeftLabel ? `${metaLeftLabel}: ` : ""}${metaLeftValue || ""}` : "";
   const metaRightText = metaRightLabel || metaRightValue ? `${metaRightLabel ? `${metaRightLabel}: ` : ""}${metaRightValue || ""}` : "";
   const bodyHtml = renderBodyAsSections
-    ? (noteType === "progress_note" || String(body || "").includes("Shift Coverage:") || String(body || "").includes("Compliance and Checks:")
-      ? formatProgressNoteHtml(body)
-      : formatNarrativeHtml(body))
+    ? formatNarrativeHtml(body)
     : `<pre>${escapeHtml(body)}</pre>`;
 
   const popup = window.open("about:blank", "_blank", "width=980,height=1100");
