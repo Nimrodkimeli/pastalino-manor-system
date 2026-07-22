@@ -1336,7 +1336,6 @@ export default function MembersPage() {
         { label: "Assessment Date", value: clinicalForm.assessmentDate },
       ],
       body: assessmentBody,
-      autoPrint: true,
     });
   };
 
@@ -1363,7 +1362,6 @@ export default function MembersPage() {
         { label: "Plan Date", value: clinicalForm.treatmentPlanDate },
       ],
       body: treatmentBody,
-      autoPrint: true,
     });
   };
 
@@ -1427,7 +1425,6 @@ export default function MembersPage() {
         { label: "Plan Date", value: clinicalForm.dischargePlanningDate },
       ],
       body: dischargeBody,
-      autoPrint: true,
     });
   };
 
@@ -1452,7 +1449,6 @@ export default function MembersPage() {
         { label: "Member", value: selectedMember?.name || selectedMemberId },
       ],
       body: incidentBody,
-      autoPrint: true,
     });
   };
 
@@ -2073,7 +2069,7 @@ export default function MembersPage() {
                 {savingClinicalField === "assessment" ? "Saving..." : "Save Client Assessment"}
               </Button>
               <Button variant="outlined" onClick={handlePrintAssessment} disabled={!selectedMemberId}>
-                Print / PDF
+                Read / Print
               </Button>
             </Stack>
 
@@ -2338,7 +2334,7 @@ export default function MembersPage() {
                 {savingClinicalField === "treatmentPlan" ? "Saving..." : "Save Treatment Plan"}
               </Button>
               <Button variant="outlined" onClick={handlePrintTreatmentPlan} disabled={!selectedMemberId}>
-                Print / PDF
+                Read / Print
               </Button>
             </Stack>
             {clinicalMessages.treatmentPlan && <Alert severity="success">{clinicalMessages.treatmentPlan}</Alert>}
@@ -2763,7 +2759,7 @@ export default function MembersPage() {
                 {savingClinicalField === "dischargePlanning" ? "Saving..." : "Save Discharge Planning"}
               </Button>
               <Button variant="outlined" onClick={handlePrintDischargePlanning} disabled={!selectedMemberId}>
-                Print / PDF
+                Read / Print
               </Button>
             </Stack>
             {clinicalMessages.dischargePlanning && <Alert severity="success">{clinicalMessages.dischargePlanning}</Alert>}
@@ -2900,7 +2896,7 @@ export default function MembersPage() {
                 <TableCell>{incident.witnesses || "-"}</TableCell>
                 <TableCell>
                   <Button size="small" variant="outlined" onClick={() => handlePrintIncident(incident)}>
-                    Print / PDF
+                    Read / Print
                   </Button>
                 </TableCell>
               </TableRow>

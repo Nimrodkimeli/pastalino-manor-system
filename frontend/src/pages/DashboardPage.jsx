@@ -234,7 +234,6 @@ export default function DashboardPage() {
         { label: "Absent", value: entry.absentCount },
       ],
       body: entry.notes || "",
-      autoPrint: true,
     });
   };
 
@@ -813,7 +812,7 @@ export default function DashboardPage() {
                   <TableCell>{entry.absentCount}</TableCell>
                   <TableCell>
                     <Button size="small" variant="outlined" onClick={() => handlePrintCensusEntry(entry)}>
-                      Print / PDF
+                      Read / Print
                     </Button>
                   </TableCell>
                 </TableRow>

@@ -19,7 +19,7 @@ export function openRecordPrintView({
   subtitle = "",
   fields = [],
   body = "",
-  autoPrint = true,
+  autoPrint = false,
 }) {
   const selectedPageSize = PAGE_SIZE_MAP[pageSize] || PAGE_SIZE_MAP.A4;
   const rowsHtml = fields

@@ -103,7 +103,6 @@ export default function FaceSheetPage() {
         { label: "Diagnosis", value: form.diagnosis },
       ],
       body: form.notes || "",
-      autoPrint: true,
     });
   };
 
@@ -142,7 +141,7 @@ export default function FaceSheetPage() {
             Save Face Sheet
           </Button>
           <Button variant="outlined" onClick={handlePrintFaceSheet}>
-            Print / PDF Face Sheet
+            Read / Print Face Sheet
           </Button>
         </Stack>
       </Paper>

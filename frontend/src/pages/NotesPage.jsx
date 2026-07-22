@@ -670,7 +670,6 @@ export default function NotesPage() {
         { label: "Created", value: note.createdAt ? new Date(note.createdAt).toLocaleString() : "" },
       ],
       body: extractNoteText(note),
-      autoPrint: true,
     });
   };
 
@@ -920,7 +919,7 @@ export default function NotesPage() {
                 <TableCell>{note.createdAt ? new Date(note.createdAt).toLocaleString() : "-"}</TableCell>
                 <TableCell>
                   <Button size="small" variant="outlined" onClick={() => handlePrintNote(note)}>
-                    Print / PDF
+                    Read / Print
                   </Button>
                 </TableCell>
               </TableRow>
