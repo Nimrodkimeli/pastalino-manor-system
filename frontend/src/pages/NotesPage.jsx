@@ -357,6 +357,7 @@ export default function NotesPage() {
   const [audioBlob, setAudioBlob] = useState(null);
   const [audioUrl, setAudioUrl] = useState("");
   const [printPageSize, setPrintPageSize] = useState("A4");
+  const [saveError, setSaveError] = useState("");
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState("");
   const [editTitle, setEditTitle] = useState("");
@@ -868,6 +869,8 @@ export default function NotesPage() {
   };
 
   const handleSubmit = async () => {
+    setSaveError("");
+
     const mentalStatusSummary = mentalStatusFields
       .map(({ key, label }) => (form[key] ? `${label}: ${form[key]}` : ""))
       .filter(Boolean)
@@ -944,20 +947,29 @@ export default function NotesPage() {
           : "",
       ].filter(Boolean).join("\n\n");
 
+    const nextMemberId = form.memberId || members[0]?.id || "";
+    const nextStaffId = form.staffId || session?.id || staffProfile?.id || "user-staff-1";
     const payload = {
       ...form,
+      memberId: nextMemberId,
+      staffId: nextStaffId,
       title: (form.title || "").trim() || noteTypeLabelMap[form.type] || "Behavioral Health Note",
       content: structuredContent,
     };
 
-    await api.post("/notes", payload);
-    handleCloseAddNote();
-    setSpeechTranscript("");
-    setSpeechError("");
-    setAudioBlob(null);
-    setAudioUrl("");
-    setForm(createInitialForm(form.memberId, form.staffId));
-    loadNotes(form.memberId);
+    try {
+      await api.post("/notes", payload);
+      handleCloseAddNote();
+      setSpeechTranscript("");
+      setSpeechError("");
+      setAudioBlob(null);
+      setAudioUrl("");
+      setForm(createInitialForm(nextMemberId, nextStaffId));
+      loadNotes(nextMemberId);
+    } catch (error) {
+      const message = error.response?.data?.message || error.response?.data?.error || "Unable to save the note.";
+      setSaveError(message);
+    }
   };
 
   return (
@@ -1104,6 +1116,11 @@ export default function NotesPage() {
           </Box>
         </DialogTitle>
         <DialogContent>
+          {saveError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {saveError}
+            </Alert>
+          )}
           <Paper variant="outlined" sx={{ width: { xs: "100%", md: "210mm" }, minHeight: { xs: "auto", md: "297mm" }, mx: "auto", mt: 1, p: { xs: 2, md: 3 }, backgroundColor: "#fff" }}>
             <Stack spacing={2}>
               <Box>
