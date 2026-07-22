@@ -45,6 +45,21 @@ function formatNarrativeHtml(body) {
     .join("");
 }
 
+function getBodyHeading(noteType) {
+  switch (noteType) {
+    case "progress_note":
+      return "Progress Note Sections";
+    case "group_note":
+      return "Group Note Sections";
+    case "counselling_note":
+      return "Individual Counseling Sections";
+    case "art_meeting":
+      return "Art Meeting Sections";
+    default:
+      return "Note Sections";
+  }
+}
+
 function parseKeyValueText(body) {
   const entries = [];
   String(body || "")
@@ -178,7 +193,7 @@ export function openRecordPrintView({
   const metaLeftText = metaLeftLabel || metaLeftValue ? `${metaLeftLabel ? `${metaLeftLabel}: ` : ""}${metaLeftValue || ""}` : "";
   const metaRightText = metaRightLabel || metaRightValue ? `${metaRightLabel ? `${metaRightLabel}: ` : ""}${metaRightValue || ""}` : "";
   const bodyHtml = renderBodyAsSections
-    ? formatNarrativeHtml(body)
+    ? `<div class="section-heading">${escapeHtml(getBodyHeading(noteType))}</div>${formatNarrativeHtml(body)}`
     : `<pre>${escapeHtml(body)}</pre>`;
 
   const popup = window.open("about:blank", "_blank", "width=980,height=1100");
