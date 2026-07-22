@@ -100,13 +100,15 @@ function renderSectionBlock(title, fields) {
   return `<section class="section-block"><div class="section-heading">${escapeHtml(title)}</div>${rows}</section>`;
 }
 
-function renderInlineFieldRow(fields) {
+function renderInlineFieldRow(fields, options = {}) {
+  const { noWrap = false } = options;
   const items = fields
     .filter((field) => field.value)
     .map((field) => `<div class="inline-field"><span class="inline-label">${escapeHtml(field.label)}:</span><span class="inline-value">${escapeHtml(field.value)}</span></div>`)
     .join("");
 
-  return items ? `<div class="inline-row">${items}</div>` : "";
+  const rowClassName = noWrap ? "inline-row no-wrap" : "inline-row";
+  return items ? `<div class="${rowClassName}">${items}</div>` : "";
 }
 
 function formatProgressNoteHtml(body) {
@@ -133,7 +135,7 @@ function formatProgressNoteHtml(body) {
     ]) + renderInlineFieldRow([
       { label: "Prompts", value: findValue("Prompts") },
       { label: "Number of Prompts", value: findValue("Number of Prompts") },
-    ]) + renderSectionBlock("Medication Details", [
+    ], { noWrap: true }) + renderSectionBlock("Medication Details", [
       { label: "Client Knows Regarding Medications", value: findValue("Client Knows Regarding Medications") },
       { label: "Does Client Have 7-Day Medication Supply?", value: findValue("Does Client Have 7-Day Medication Supply?") },
       { label: "Medication Observation", value: findValue("Medication Observation") },
@@ -339,12 +341,23 @@ export function openRecordPrintView({
         gap: 8px 14px;
         margin: 0 0 6px;
       }
+      .inline-row.no-wrap {
+        flex-wrap: nowrap;
+        gap: 10px;
+      }
       .inline-field {
         display: flex;
         align-items: baseline;
         gap: 6px;
         flex: 1 1 180px;
         min-width: 180px;
+      }
+      .inline-row.no-wrap .inline-field {
+        flex: 0 1 auto;
+        min-width: 0;
+      }
+      .inline-row.no-wrap .inline-value {
+        white-space: nowrap;
       }
       .inline-label {
         font-weight: 700;
