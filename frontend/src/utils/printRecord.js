@@ -300,7 +300,7 @@ export function openRecordPrintView({
       th, td {
         border: 1px solid var(--line);
         padding: 6px 8px;
-        font-size: 11px;
+        font-size: 12px;
         vertical-align: top;
         line-height: 1.25;
       }
@@ -356,9 +356,10 @@ export function openRecordPrintView({
       }
       .inline-value, .kv-value {
         line-height: 1.3;
+        font-size: 12px;
       }
       .section-heading {
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 700;
         margin-bottom: 6px;
         color: var(--brand);
@@ -381,13 +382,13 @@ export function openRecordPrintView({
       .paragraph {
         margin: 0 0 4px;
         line-height: 1.3;
-        font-size: 11px;
+        font-size: 12px;
       }
       pre {
         white-space: pre-wrap;
         word-break: break-word;
         font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-        font-size: 11px;
+        font-size: 12px;
         line-height: 1.3;
         margin: 0;
       }
