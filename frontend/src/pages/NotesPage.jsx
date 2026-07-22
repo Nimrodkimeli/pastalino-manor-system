@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, Select, FormControl, InputLabel, Checkbox, FormControlLabel } from "@mui/material";
+import { Box, Button, Chip, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, Select, FormControl, InputLabel, Checkbox, FormControlLabel } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import api, { clearSession, getSession } from "../api";
 import { openRecordPrintView } from "../utils/printRecord";
@@ -668,6 +668,28 @@ export default function NotesPage() {
     }
   };
 
+  const isNoteDigitallySigned = (note) => {
+    if (!note?.content) {
+      return false;
+    }
+
+    try {
+      const parsed = JSON.parse(note.content);
+      if (parsed?.digitalSignature?.signatureHash) {
+        return true;
+      }
+      if (typeof parsed?.clinicalNarrative === "string" && parsed.clinicalNarrative.includes("Signature Hash:")) {
+        return true;
+      }
+    } catch {
+      if (typeof note.content === "string" && note.content.includes("Signature Hash:")) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
   const handlePrintNote = (note) => {
     const memberName = members.find((member) => member.id === note.memberId)?.name || note.memberId;
     openRecordPrintView({
@@ -960,6 +982,7 @@ export default function NotesPage() {
               <TableCell>Member</TableCell>
               <TableCell>Writer</TableCell>
               <TableCell>Created</TableCell>
+              <TableCell>Signed</TableCell>
               <TableCell>Preview</TableCell>
               <TableCell>Record Export</TableCell>
               <TableCell>Manage</TableCell>
@@ -973,6 +996,13 @@ export default function NotesPage() {
                   <TableCell>{note.memberId}</TableCell>
                   <TableCell>{note.staffId}</TableCell>
                   <TableCell>{note.createdAt ? new Date(note.createdAt).toLocaleString() : "-"}</TableCell>
+                  <TableCell>
+                    {isNoteDigitallySigned(note) ? (
+                      <Chip label="Signed" color="success" size="small" />
+                    ) : (
+                      <Chip label="Unsigned" variant="outlined" size="small" />
+                    )}
+                  </TableCell>
                   <TableCell>
                     <Button size="small" variant="outlined" onClick={() => handleToggleNoteExpansion(note.id)}>
                       {expandedNoteId === note.id ? "Minimize" : "Expand"}
@@ -996,7 +1026,7 @@ export default function NotesPage() {
                 </TableRow>,
                 expandedNoteId === note.id ? (
                   <TableRow key={`${note.id}-expanded`}>
-                    <TableCell colSpan={8}>
+                    <TableCell colSpan={9}>
                       <Paper variant="outlined" sx={{ p: 2, backgroundColor: "#fafafa" }}>
                         <Typography variant="subtitle2" mb={1}>Note Preview</Typography>
                         <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
