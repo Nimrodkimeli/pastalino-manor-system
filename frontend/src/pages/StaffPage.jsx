@@ -115,6 +115,17 @@ export default function StaffPage() {
     }
   };
 
+  const handleDeleteDocument = async (documentId) => {
+    const confirmed = window.confirm("Delete this uploaded document?");
+    if (!confirmed) {
+      return;
+    }
+
+    await api.delete(`/documents/${documentId}`);
+    const response = await api.get("/documents", { params: { ownerType: "staff", ownerId: selectedStaffId } });
+    setDocuments(response.data);
+  };
+
   const handleCreateStaff = async () => {
     if (!isAdmin || !staffCreateForm.name.trim() || !staffCreateForm.email.trim()) {
       return;
@@ -228,7 +239,7 @@ export default function StaffPage() {
               <TableCell>Category</TableCell>
               <TableCell>File</TableCell>
               <TableCell>Expiry</TableCell>
-              <TableCell>Open</TableCell>
+              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -238,14 +249,20 @@ export default function StaffPage() {
                 <TableCell>{document.category || "Staff File"}</TableCell>
                 <TableCell>{document.fileName}</TableCell>
                 <TableCell>{document.expiresAt ? new Date(document.expiresAt).toLocaleDateString() : "-"}</TableCell>
-                <TableCell>
-                  {document.fileUrl ? (
-                    <a href={document.fileUrl} target="_blank" rel="noreferrer">
-                      Open
-                    </a>
-                  ) : (
-                    "-"
-                  )}
+                <TableCell align="right">
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => window.open(document.fileUrl, "_blank", "noopener,noreferrer")}
+                      disabled={!document.fileUrl}
+                    >
+                      View
+                    </Button>
+                    <Button size="small" color="error" variant="outlined" onClick={() => handleDeleteDocument(document.id)}>
+                      Delete
+                    </Button>
+                  </Stack>
                 </TableCell>
               </TableRow>
             ))}

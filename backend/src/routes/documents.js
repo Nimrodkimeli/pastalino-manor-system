@@ -67,4 +67,14 @@ router.post(
   }
 );
 
+router.delete("/:id", async (req, res) => {
+  const document = await all("SELECT id FROM documents WHERE id = ? LIMIT 1", [req.params.id]);
+  if (!document.length) {
+    return res.status(404).json({ message: "Document not found." });
+  }
+
+  await run("DELETE FROM documents WHERE id = ?", [req.params.id]);
+  res.json({ message: "Document deleted." });
+});
+
 module.exports = router;

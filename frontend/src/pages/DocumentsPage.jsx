@@ -11,6 +11,24 @@ export default function DocumentsPage() {
     setDocuments(response.data);
   };
 
+  const handleViewDocument = (document) => {
+    if (!document.fileUrl) {
+      return;
+    }
+
+    window.open(document.fileUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleDeleteDocument = async (documentId) => {
+    const confirmed = window.confirm("Delete this uploaded document?");
+    if (!confirmed) {
+      return;
+    }
+
+    await api.delete(`/documents/${documentId}`);
+    await load();
+  };
+
   useEffect(() => {
     load();
   }, []);
@@ -35,6 +53,7 @@ export default function DocumentsPage() {
               <TableCell>Owner</TableCell>
               <TableCell>Expires</TableCell>
               <TableCell>Status</TableCell>
+              <TableCell align="right">Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -45,6 +64,16 @@ export default function DocumentsPage() {
                 <TableCell>{doc.ownerType} / {doc.ownerId}</TableCell>
                 <TableCell>{doc.expiresAt ? new Date(doc.expiresAt).toLocaleDateString() : "None"}</TableCell>
                 <TableCell>{doc.status}</TableCell>
+                <TableCell align="right">
+                  <Stack direction="row" spacing={1} justifyContent="flex-end">
+                    <Button size="small" variant="outlined" onClick={() => handleViewDocument(doc)} disabled={!doc.fileUrl}>
+                      View
+                    </Button>
+                    <Button size="small" color="error" variant="outlined" onClick={() => handleDeleteDocument(doc.id)}>
+                      Delete
+                    </Button>
+                  </Stack>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
