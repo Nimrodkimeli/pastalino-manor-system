@@ -145,9 +145,6 @@ function buildBhtDraft({
 
     const progressSummary = [
       `Progress Note`,
-      `Date of Service: ${noteDate || new Date().toISOString().slice(0, 10)}`,
-      `Member: ${memberName}`,
-      `Diagnosis: ${diagnosis || "Not documented"}`,
       `Shift Coverage: ${shiftCoverage || "Not documented"}`,
       shiftHours ? `Shift Hours: ${shiftHours}` : "",
       didSelfAdminMedication ? `Client self-administered medication: ${didSelfAdminMedication}` : "",
@@ -176,9 +173,8 @@ function buildBhtDraft({
       formattedNightChecks ? `Night shift checks: ${formattedNightChecks}` : "",
       nightShiftNotes ? `Night shift notes: ${nightShiftNotes}` : "",
       additionalProgressNotes ? `Additional progress details: ${additionalProgressNotes}` : "",
-      safePrompt ? `Staff input: ${safePrompt}` : "",
       "",
-      `${memberName} received BHRF support during the documented shift. Staff monitored medication routines, ADL/ILS participation, behavioral presentation, and follow-through with scheduled activities and appointments. Support and observations were recorded based on the selected shift options and staff input above.`,
+      `Staff provided BHRF support during the documented shift. Medication routines, ADL/ILS participation, behavioral presentation, and follow-through with scheduled activities and appointments were monitored and recorded based on the selected shift options and staff analysis.`,
     ].filter(Boolean).join("\n");
 
     return {
@@ -203,9 +199,6 @@ function buildBhtDraft({
 
   const fullNote = [
     `${title || noteLabels[noteType] || "Behavioral Health Note"}`,
-    `Date of Service: ${noteDate || new Date().toISOString().slice(0, 10)}`,
-    `Member: ${memberName}`,
-    `Diagnosis: ${diagnosis || "Not documented"}`,
     `Location: ${location || "Program setting"}`,
     `Risk Level: ${riskLevel || "Low"}`,
     "",
@@ -215,9 +208,8 @@ function buildBhtDraft({
     `Client's Response: ${finalResponse}`,
     `Progress Towards Goals: ${finalProgress}`,
     `Plan/Next Step: ${finalPlan}`,
-    safePrompt ? `Staff Input: ${safePrompt}` : "",
     "",
-    `BHT Summary: Staff provided direct behavioral-health support using simple prompts and coping practice. ${memberName} remained safe during the session and participated in treatment-focused activities.`,
+    `BHT Summary: Staff provided direct behavioral-health support using simple prompts and coping practice. Treatment-focused activities were completed and documented based on the staff observations above.`,
   ]
     .filter(Boolean)
     .join("\n");
