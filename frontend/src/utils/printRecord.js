@@ -261,27 +261,27 @@ export function openRecordPrintView({
         border: 1px solid var(--line);
         border-left: 5px solid var(--brand);
         background: linear-gradient(180deg, #ffffff, #f9fbfd);
-        padding: 10px 12px;
-        margin-bottom: 8px;
+        padding: 14px 16px;
+        margin-bottom: 12px;
       }
       .org-title {
         text-align: center;
         font-weight: 700;
-        font-size: ${Math.min(safeOrganizationFontSize, 42)}px;
+        font-size: ${safeOrganizationFontSize}px;
         line-height: 1;
         margin: 0;
         text-transform: uppercase;
       }
       h1 {
-        font-size: ${Math.min(safeTitleFontSize, 22)}px;
-        margin: 6px 0 0;
-        line-height: 1.12;
+        font-size: ${safeTitleFontSize}px;
+        margin: 8px 0 0;
+        line-height: 1.2;
         text-align: center;
       }
       .subtitle {
-        margin: 4px 0 0;
+        margin: 6px 0 0;
         color: var(--muted);
-        font-size: 11px;
+        font-size: 12px;
       }
       .section-title {
         margin: 10px 0 6px;
