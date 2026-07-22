@@ -349,6 +349,7 @@ export default function NotesPage() {
   const [aiDraft, setAiDraft] = useState("");
   const [aiError, setAiError] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const aiDraftSnapshotRef = useRef(null);
   const [speechTranscript, setSpeechTranscript] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [speechError, setSpeechError] = useState("");
@@ -774,6 +775,11 @@ export default function NotesPage() {
   const handleAiDraft = async () => {
     setAiError("");
     setAiLoading(true);
+    aiDraftSnapshotRef.current = {
+      form: JSON.parse(JSON.stringify(form)),
+      aiPrompt,
+      aiDraft,
+    };
 
     const medicationKnowledgeSummary = [
       form.medKnowledgeName ? "Name" : "",
@@ -867,6 +873,20 @@ export default function NotesPage() {
     } finally {
       setAiLoading(false);
     }
+  };
+
+  const handleDeleteAiDraft = () => {
+    const snapshot = aiDraftSnapshotRef.current;
+    if (!snapshot) {
+      setAiDraft("");
+      setAiPrompt("");
+      return;
+    }
+
+    setForm(snapshot.form);
+    setAiPrompt(snapshot.aiPrompt || "");
+    setAiDraft("");
+    setAiError("");
   };
 
   const handleSubmit = async () => {
@@ -1273,9 +1293,14 @@ export default function NotesPage() {
             ) : (
               <>
                 <TextField label="AI note input" value={aiPrompt} onChange={(event) => setAiPrompt(event.target.value)} multiline rows={2} fullWidth helperText="Enter brief staff details. AI will generate a full BHT-level note based on member diagnosis." />
-                <Button variant="outlined" onClick={handleAiDraft} disabled={aiLoading || !form.memberId}>
-                  {aiLoading ? "Generating..." : "Generate Full AI Note"}
-                </Button>
+                <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                  <Button variant="outlined" onClick={handleAiDraft} disabled={aiLoading || !form.memberId}>
+                    {aiLoading ? "Generating..." : "Generate Full AI Note"}
+                  </Button>
+                  <Button variant="outlined" color="error" onClick={handleDeleteAiDraft} disabled={!aiDraft && !aiDraftSnapshotRef.current}>
+                    Delete AI Notes
+                  </Button>
+                </Stack>
                 {aiError && <Typography color="error" variant="body2">{aiError}</Typography>}
                 {aiDraft && (
                   <Paper variant="outlined" sx={{ p: 2, backgroundColor: "#f8fafc" }}>
