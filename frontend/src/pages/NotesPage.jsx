@@ -691,11 +691,20 @@ export default function NotesPage() {
   };
 
   const handlePrintNote = (note) => {
-    const memberName = members.find((member) => member.id === note.memberId)?.name || note.memberId;
+    const selectedMember = members.find((member) => member.id === note.memberId);
+    const memberName = selectedMember?.name || note.memberId;
     openRecordPrintView({
       title: note.title || "Behavioral Health Note",
       subtitle: "Pastalino Manor LLC - Individual Record Export",
       headerLabel: noteTypeLabelMap[note.type] || "Behavioral Health Note",
+      organizationName: "Pastalino Manor LLC",
+      organizationFontSize: 48,
+      titleFontSize: 24,
+      metaLeftLabel: "Member Name",
+      metaLeftValue: memberName,
+      metaRightLabel: "Date of Birth",
+      metaRightValue: selectedMember?.dob || "",
+      renderBodyAsSections: true,
       pageSize: printPageSize,
       fields: [
         { label: "Type", value: note.type },

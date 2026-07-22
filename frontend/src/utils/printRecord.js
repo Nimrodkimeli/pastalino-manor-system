@@ -13,16 +13,63 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+function formatNarrativeHtml(body) {
+  const text = String(body || "").trim();
+  if (!text) {
+    return '<p class="paragraph">No narrative provided.</p>';
+  }
+
+  const blocks = text.split(/\n\s*\n/).filter(Boolean);
+  return blocks
+    .map((block) => {
+      const lines = block.split("\n").map((line) => line.trim()).filter(Boolean);
+      if (!lines.length) {
+        return "";
+      }
+
+      const rows = lines
+        .map((line) => {
+          const dividerIndex = line.indexOf(":");
+          if (dividerIndex > 0) {
+            const label = line.slice(0, dividerIndex).trim();
+            const value = line.slice(dividerIndex + 1).trim();
+            return `<div class="kv-row"><span class="kv-label">${escapeHtml(label)}:</span><span class="kv-value">${escapeHtml(value)}</span></div>`;
+          }
+
+          return `<p class="paragraph">${escapeHtml(line)}</p>`;
+        })
+        .join("");
+
+      return `<section class="section-block">${rows}</section>`;
+    })
+    .join("");
+}
+
 export function openRecordPrintView({
   title,
   pageSize = "A4",
   subtitle = "",
   fields = [],
   body = "",
+  organizationName = "Pastalino Manor LLC",
+  organizationFontSize = 48,
+  titleFontSize = 24,
+  metaLeftLabel = "",
+  metaLeftValue = "",
+  metaRightLabel = "",
+  metaRightValue = "",
+  renderBodyAsSections = false,
   headerLabel = "",
   autoPrint = false,
 }) {
   const selectedPageSize = PAGE_SIZE_MAP[pageSize] || PAGE_SIZE_MAP.A4;
+  const safeOrganizationFontSize = Number.isFinite(Number(organizationFontSize)) ? Number(organizationFontSize) : 48;
+  const safeTitleFontSize = Number.isFinite(Number(titleFontSize)) ? Number(titleFontSize) : 24;
+  const metaLeftText = metaLeftLabel || metaLeftValue ? `${metaLeftLabel ? `${metaLeftLabel}: ` : ""}${metaLeftValue || ""}` : "";
+  const metaRightText = metaRightLabel || metaRightValue ? `${metaRightLabel ? `${metaRightLabel}: ` : ""}${metaRightValue || ""}` : "";
+  const bodyHtml = renderBodyAsSections
+    ? formatNarrativeHtml(body)
+    : `<pre>${escapeHtml(body)}</pre>`;
 
   const popup = window.open("about:blank", "_blank", "width=980,height=1100");
   if (!popup) {
@@ -74,10 +121,19 @@ export function openRecordPrintView({
         padding: 14px 16px;
         margin-bottom: 12px;
       }
-      h1 {
-        font-size: 21px;
+      .org-title {
+        text-align: center;
+        font-weight: 700;
+        font-size: ${safeOrganizationFontSize}px;
+        line-height: 1;
         margin: 0;
+        text-transform: uppercase;
+      }
+      h1 {
+        font-size: ${safeTitleFontSize}px;
+        margin: 8px 0 0;
         line-height: 1.2;
+        text-align: center;
       }
       .subtitle {
         margin: 6px 0 0;
@@ -116,6 +172,42 @@ export function openRecordPrintView({
         padding: 10px;
         min-height: 80px;
       }
+      .meta-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+      .meta-item {
+        font-size: 14px;
+        font-weight: 700;
+      }
+      .section-block {
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        padding: 10px;
+        margin-bottom: 8px;
+      }
+      .kv-row {
+        display: flex;
+        gap: 6px;
+        margin-bottom: 6px;
+        flex-wrap: wrap;
+      }
+      .kv-label {
+        font-weight: 700;
+      }
+      .kv-value {
+        flex: 1;
+        min-width: 120px;
+      }
+      .paragraph {
+        margin: 0 0 6px;
+        line-height: 1.45;
+        font-size: 12px;
+      }
       pre {
         white-space: pre-wrap;
         word-break: break-word;
@@ -142,13 +234,16 @@ export function openRecordPrintView({
         <button onclick="window.print()">Print / Save PDF</button>
       </div>
       <header class="header">
-        <p class="subtitle" style="margin: 0 0 6px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand);">Pastalino Manor LLC${headerLabel ? ` | ${escapeHtml(headerLabel)}` : ""}</p>
-        <h1>${escapeHtml(title)}</h1>
+        <p class="org-title">${escapeHtml(organizationName)}</p>
+        <h1>${escapeHtml(headerLabel || title)}</h1>
         ${subtitle ? `<p class="subtitle">${escapeHtml(subtitle)}</p>` : ""}
+        ${(metaLeftText || metaRightText)
+          ? `<div class="meta-row"><div class="meta-item">${escapeHtml(metaLeftText)}</div><div class="meta-item">${escapeHtml(metaRightText)}</div></div>`
+          : ""}
       </header>
       <div class="section-title">Narrative</div>
       <div class="body-panel">
-        <pre>${escapeHtml(body)}</pre>
+        ${bodyHtml}
       </div>
       <p class="meta">Generated: ${escapeHtml(new Date().toLocaleString())}</p>
     </div>
