@@ -22,15 +22,6 @@ export function openRecordPrintView({
   autoPrint = false,
 }) {
   const selectedPageSize = PAGE_SIZE_MAP[pageSize] || PAGE_SIZE_MAP.A4;
-  const rowsHtml = fields
-    .map(({ label, value }) => {
-      if (value === undefined || value === null || value === "") {
-        return "";
-      }
-
-      return `<tr><th>${escapeHtml(label)}</th><td>${escapeHtml(value)}</td></tr>`;
-    })
-    .join("");
 
   const popup = window.open("about:blank", "_blank", "width=980,height=1100");
   if (!popup) {
@@ -150,10 +141,10 @@ export function openRecordPrintView({
         <button onclick="window.print()">Print / Save PDF</button>
       </div>
       <header class="header">
+        <p class="subtitle" style="margin: 0 0 6px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand);">Pastalino Manor LLC</p>
         <h1>${escapeHtml(title)}</h1>
         ${subtitle ? `<p class="subtitle">${escapeHtml(subtitle)}</p>` : ""}
       </header>
-      ${rowsHtml ? `<div class="section-title">Record Details</div><table><tbody>${rowsHtml}</tbody></table>` : ""}
       <div class="section-title">Narrative</div>
       <div class="body-panel">
         <pre>${escapeHtml(body)}</pre>

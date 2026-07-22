@@ -351,6 +351,11 @@ export default function NotesPage() {
   const [audioBlob, setAudioBlob] = useState(null);
   const [audioUrl, setAudioUrl] = useState("");
   const [printPageSize, setPrintPageSize] = useState("A4");
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState("");
+  const [editTitle, setEditTitle] = useState("");
+  const [editType, setEditType] = useState("counselling_note");
+  const [editContent, setEditContent] = useState("");
   const recognitionRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const activeStreamRef = useRef(null);
@@ -678,6 +683,44 @@ export default function NotesPage() {
     setExpandedNoteId((prev) => (prev === noteId ? null : noteId));
   };
 
+  const handleOpenEditNote = (note) => {
+    setEditingNoteId(note.id);
+    setEditTitle(note.title || "");
+    setEditType(note.type || "counselling_note");
+    setEditContent(extractNoteText(note) || "");
+    setIsEditOpen(true);
+  };
+
+  const handleSaveEditedNote = async () => {
+    if (!editingNoteId || !editContent.trim()) {
+      return;
+    }
+
+    await api.put(`/notes/${editingNoteId}`, {
+      title: editTitle.trim() || "Behavioral Health Note",
+      type: editType,
+      category: editType,
+      content: editContent,
+    });
+
+    setIsEditOpen(false);
+    setEditingNoteId("");
+    await loadNotes(form.memberId);
+  };
+
+  const handleDeleteNote = async (note) => {
+    const shouldDelete = window.confirm(`Delete note \"${note.title || "Untitled Note"}\"? This cannot be undone.`);
+    if (!shouldDelete) {
+      return;
+    }
+
+    await api.delete(`/notes/${note.id}`);
+    if (expandedNoteId === note.id) {
+      setExpandedNoteId(null);
+    }
+    await loadNotes(form.memberId);
+  };
+
   const handleAiDraft = async () => {
     setAiError("");
     setAiLoading(true);
@@ -913,6 +956,7 @@ export default function NotesPage() {
               <TableCell>Created</TableCell>
               <TableCell>Preview</TableCell>
               <TableCell>Record Export</TableCell>
+              <TableCell>Manage</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -933,10 +977,20 @@ export default function NotesPage() {
                       Read / Print
                     </Button>
                   </TableCell>
+                  <TableCell>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                      <Button size="small" variant="outlined" onClick={() => handleOpenEditNote(note)}>
+                        Edit
+                      </Button>
+                      <Button size="small" color="error" variant="outlined" onClick={() => handleDeleteNote(note)}>
+                        Delete
+                      </Button>
+                    </Stack>
+                  </TableCell>
                 </TableRow>,
                 expandedNoteId === note.id ? (
                   <TableRow key={`${note.id}-expanded`}>
-                    <TableCell colSpan={7}>
+                    <TableCell colSpan={8}>
                       <Paper variant="outlined" sx={{ p: 2, backgroundColor: "#fafafa" }}>
                         <Typography variant="subtitle2" mb={1}>Note Preview</Typography>
                         <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
@@ -950,6 +1004,33 @@ export default function NotesPage() {
           </TableBody>
         </Table>
       </Paper>
+      <Dialog open={isEditOpen} onClose={() => setIsEditOpen(false)} fullWidth maxWidth="md">
+        <DialogTitle>Edit Note</DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ mt: 1 }}>
+            <TextField label="Title" value={editTitle} onChange={(event) => setEditTitle(event.target.value)} fullWidth />
+            <TextField select label="Type" value={editType} onChange={(event) => setEditType(event.target.value)}>
+              {noteTypes.map((type) => (
+                <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              label="Note Content"
+              value={editContent}
+              onChange={(event) => setEditContent(event.target.value)}
+              multiline
+              minRows={8}
+              fullWidth
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsEditOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={handleSaveEditedNote} disabled={!editContent.trim()}>
+            Save Changes
+          </Button>
+        </DialogActions>
+      </Dialog>
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth>
         <DialogTitle>Add Behavioral Health Note</DialogTitle>
         <DialogContent>
