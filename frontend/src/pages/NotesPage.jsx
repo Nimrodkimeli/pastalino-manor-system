@@ -343,6 +343,7 @@ export default function NotesPage() {
   const [members, setMembers] = useState([]);
   const [staffProfile, setStaffProfile] = useState(null);
   const [open, setOpen] = useState(false);
+  const [isAddNoteExpanded, setIsAddNoteExpanded] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [staffPosition, setStaffPosition] = useState("BHT");
   const [aiDraft, setAiDraft] = useState("");
@@ -720,6 +721,16 @@ export default function NotesPage() {
     setExpandedNoteId((prev) => (prev === noteId ? null : noteId));
   };
 
+  const handleOpenAddNote = () => {
+    setIsAddNoteExpanded(false);
+    setOpen(true);
+  };
+
+  const handleCloseAddNote = () => {
+    setOpen(false);
+    setIsAddNoteExpanded(false);
+  };
+
   const handleOpenEditNote = (note) => {
     setEditingNoteId(note.id);
     setEditTitle(note.title || "");
@@ -939,7 +950,7 @@ export default function NotesPage() {
     };
 
     await api.post("/notes", payload);
-    setOpen(false);
+    handleCloseAddNote();
     setSpeechTranscript("");
     setSpeechError("");
     setAudioBlob(null);
@@ -956,7 +967,7 @@ export default function NotesPage() {
           <Button variant="outlined" onClick={handlePrint}>
             Print Notes
           </Button>
-          <Button variant="contained" onClick={() => setOpen(true)}>
+          <Button variant="contained" onClick={handleOpenAddNote}>
             Add Note
           </Button>
         </Stack>
@@ -1076,8 +1087,21 @@ export default function NotesPage() {
           </Button>
         </DialogActions>
       </Dialog>
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth>
-        <DialogTitle>Add Behavioral Health Note</DialogTitle>
+      <Dialog
+        open={open}
+        onClose={handleCloseAddNote}
+        fullWidth
+        maxWidth={isAddNoteExpanded ? false : "lg"}
+        fullScreen={isAddNoteExpanded}
+      >
+        <DialogTitle>
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+            <Typography variant="h6">Add Behavioral Health Note</Typography>
+            <Button size="small" variant="outlined" onClick={() => setIsAddNoteExpanded((prev) => !prev)}>
+              {isAddNoteExpanded ? "Minimize" : "Expand"}
+            </Button>
+          </Box>
+        </DialogTitle>
         <DialogContent>
           <Paper variant="outlined" sx={{ width: { xs: "100%", md: "210mm" }, minHeight: { xs: "auto", md: "297mm" }, mx: "auto", mt: 1, p: { xs: 2, md: 3 }, backgroundColor: "#fff" }}>
             <Stack spacing={2}>
@@ -1555,7 +1579,7 @@ export default function NotesPage() {
           </Paper>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
+          <Button onClick={handleCloseAddNote}>Cancel</Button>
           <Button
             variant="contained"
             onClick={handleSubmit}
