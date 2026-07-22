@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Box, Paper, Typography, TextField, Table, TableBody, TableCell, TableHead, TableRow, Button, Stack } from "@mui/material";
 import api from "../api";
+import { openDocumentInNewTab } from "../utils/documentViewer";
 
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState([]);
@@ -16,7 +17,7 @@ export default function DocumentsPage() {
       return;
     }
 
-    window.open(document.fileUrl, "_blank", "noopener,noreferrer");
+    openDocumentInNewTab(document.fileUrl);
   };
 
   const handleDeleteDocument = async (documentId) => {

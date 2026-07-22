@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 import api from "../api";
 import { getSession } from "../api";
+import { openDocumentInNewTab } from "../utils/documentViewer";
 
 export default function StaffPage() {
   const session = getSession();
@@ -254,7 +255,7 @@ export default function StaffPage() {
                     <Button
                       size="small"
                       variant="outlined"
-                      onClick={() => window.open(document.fileUrl, "_blank", "noopener,noreferrer")}
+                      onClick={() => openDocumentInNewTab(document.fileUrl)}
                       disabled={!document.fileUrl}
                     >
                       View

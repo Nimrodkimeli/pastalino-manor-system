@@ -24,6 +24,7 @@ import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { getSession } from "../api";
 import { openRecordPrintView } from "../utils/printRecord";
+import { openDocumentInNewTab } from "../utils/documentViewer";
 
 const symptomOptions = [
   "Denied current symptoms",
@@ -1561,7 +1562,7 @@ export default function MembersPage() {
                     <Button
                       size="small"
                       variant="outlined"
-                      onClick={() => window.open(document.fileUrl, "_blank", "noopener,noreferrer")}
+                      onClick={() => openDocumentInNewTab(document.fileUrl)}
                       disabled={!document.fileUrl}
                     >
                       View
