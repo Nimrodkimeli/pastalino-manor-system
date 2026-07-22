@@ -342,6 +342,14 @@ export default function FireDrillsPage() {
                     <Button size="small" variant="outlined" onClick={() => openDocumentInNewTab(document.fileUrl)} disabled={!document.fileUrl}>
                       View
                     </Button>
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => openDocumentInNewTab(document.fileUrl, { printAfterOpen: true })}
+                      disabled={!document.fileUrl}
+                    >
+                      Print
+                    </Button>
                     <Button size="small" variant="outlined" color="error" onClick={() => handleDeleteUploadedDocument(document.id)}>
                       Delete
                     </Button>

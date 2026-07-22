@@ -19,7 +19,8 @@ function dataUrlToBlobUrl(dataUrl) {
   return URL.createObjectURL(blob);
 }
 
-export function openDocumentInNewTab(fileUrl) {
+export function openDocumentInNewTab(fileUrl, options = {}) {
+  const { printAfterOpen = false } = options;
   const url = String(fileUrl || "").trim();
   if (!url) {
     return false;
@@ -43,6 +44,16 @@ export function openDocumentInNewTab(fileUrl) {
     setTimeout(() => {
       URL.revokeObjectURL(viewUrl);
     }, 60_000);
+  }
+
+  if (printAfterOpen) {
+    setTimeout(() => {
+      try {
+        popup.print();
+      } catch {
+        // Keep view behavior even if print is blocked by browser policy.
+      }
+    }, 500);
   }
 
   return true;
