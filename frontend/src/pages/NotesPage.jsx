@@ -875,16 +875,9 @@ export default function NotesPage() {
     }
   };
 
-  const handleDeleteAiDraft = () => {
-    const snapshot = aiDraftSnapshotRef.current;
-    if (!snapshot) {
-      setAiDraft("");
-      setAiPrompt("");
-      return;
-    }
-
-    setForm(snapshot.form);
-    setAiPrompt(snapshot.aiPrompt || "");
+  const handleClearAiDraft = () => {
+    aiDraftSnapshotRef.current = null;
+    setAiPrompt("");
     setAiDraft("");
     setAiError("");
   };
@@ -1297,8 +1290,8 @@ export default function NotesPage() {
                   <Button variant="outlined" onClick={handleAiDraft} disabled={aiLoading || !form.memberId}>
                     {aiLoading ? "Generating..." : "Generate Full AI Note"}
                   </Button>
-                  <Button variant="outlined" color="error" onClick={handleDeleteAiDraft} disabled={!aiDraft && !aiDraftSnapshotRef.current}>
-                    Delete AI Notes
+                  <Button variant="outlined" color="error" onClick={handleClearAiDraft} disabled={!aiDraft && !aiPrompt}>
+                    Clear AI Notes
                   </Button>
                 </Stack>
                 {aiError && <Typography color="error" variant="body2">{aiError}</Typography>}
