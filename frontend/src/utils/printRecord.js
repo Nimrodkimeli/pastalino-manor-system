@@ -233,7 +233,7 @@ export function openRecordPrintView({
         --line: #c8d0d8;
         --panel: #f3f6f9;
       }
-      @page { size: ${selectedPageSize}; margin: 12mm; }
+      @page { size: ${selectedPageSize}; margin: 8mm; }
       * { box-sizing: border-box; }
       body {
         font-family: "Segoe UI", Tahoma, Arial, sans-serif;
@@ -246,46 +246,46 @@ export function openRecordPrintView({
         margin: 0 auto;
       }
       .toolbar {
-        margin-bottom: 12px;
+        margin-bottom: 8px;
       }
       .toolbar button {
         border: 0;
         border-radius: 6px;
         background: var(--brand);
         color: #fff;
-        padding: 9px 14px;
-        font-size: 13px;
+        padding: 7px 12px;
+        font-size: 12px;
         cursor: pointer;
       }
       .header {
         border: 1px solid var(--line);
         border-left: 5px solid var(--brand);
         background: linear-gradient(180deg, #ffffff, #f9fbfd);
-        padding: 14px 16px;
-        margin-bottom: 12px;
+        padding: 10px 12px;
+        margin-bottom: 8px;
       }
       .org-title {
         text-align: center;
         font-weight: 700;
-        font-size: ${safeOrganizationFontSize}px;
+        font-size: ${Math.min(safeOrganizationFontSize, 42)}px;
         line-height: 1;
         margin: 0;
         text-transform: uppercase;
       }
       h1 {
-        font-size: ${safeTitleFontSize}px;
-        margin: 8px 0 0;
-        line-height: 1.2;
+        font-size: ${Math.min(safeTitleFontSize, 22)}px;
+        margin: 6px 0 0;
+        line-height: 1.12;
         text-align: center;
       }
       .subtitle {
-        margin: 6px 0 0;
+        margin: 4px 0 0;
         color: var(--muted);
-        font-size: 12px;
+        font-size: 11px;
       }
       .section-title {
-        margin: 14px 0 8px;
-        font-size: 12px;
+        margin: 10px 0 6px;
+        font-size: 11px;
         color: var(--brand);
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -294,15 +294,15 @@ export function openRecordPrintView({
       table {
         width: 100%;
         border-collapse: collapse;
-        margin-bottom: 10px;
+        margin-bottom: 8px;
         border: 1px solid var(--line);
       }
       th, td {
         border: 1px solid var(--line);
-        padding: 8px 9px;
-        font-size: 12px;
+        padding: 6px 8px;
+        font-size: 11px;
         vertical-align: top;
-        line-height: 1.35;
+        line-height: 1.25;
       }
       th {
         width: 33%;
@@ -312,39 +312,39 @@ export function openRecordPrintView({
       }
       .body-panel {
         border: 1px solid var(--line);
-        padding: 10px;
-        min-height: 80px;
+        padding: 7px;
+        min-height: 64px;
       }
       .meta-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         gap: 12px;
-        margin-top: 10px;
-        margin-bottom: 10px;
+        margin-top: 8px;
+        margin-bottom: 8px;
       }
       .meta-item {
-        font-size: 14px;
+        font-size: 12px;
         font-weight: 700;
       }
       .section-block {
         border: 1px solid var(--line);
         border-radius: 4px;
-        padding: 10px;
-        margin-bottom: 8px;
+        padding: 7px 8px;
+        margin-bottom: 6px;
       }
       .inline-row {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px 18px;
-        margin: 0 0 8px;
+        gap: 8px 14px;
+        margin: 0 0 6px;
       }
       .inline-field {
         display: flex;
         align-items: baseline;
         gap: 6px;
-        flex: 1 1 220px;
-        min-width: 220px;
+        flex: 1 1 180px;
+        min-width: 180px;
       }
       .inline-label {
         font-weight: 700;
@@ -355,12 +355,12 @@ export function openRecordPrintView({
         flex: 1;
       }
       .inline-value, .kv-value {
-        line-height: 1.45;
+        line-height: 1.3;
       }
       .section-heading {
-        font-size: 13px;
+        font-size: 12px;
         font-weight: 700;
-        margin-bottom: 8px;
+        margin-bottom: 6px;
         color: var(--brand);
         text-transform: uppercase;
         letter-spacing: 0.04em;
@@ -368,7 +368,7 @@ export function openRecordPrintView({
       .kv-row {
         display: flex;
         gap: 6px;
-        margin-bottom: 6px;
+        margin-bottom: 4px;
         flex-wrap: wrap;
       }
       .kv-label {
@@ -379,26 +379,28 @@ export function openRecordPrintView({
         min-width: 120px;
       }
       .paragraph {
-        margin: 0 0 6px;
-        line-height: 1.45;
-        font-size: 12px;
+        margin: 0 0 4px;
+        line-height: 1.3;
+        font-size: 11px;
       }
       pre {
         white-space: pre-wrap;
         word-break: break-word;
         font-family: "Segoe UI", Tahoma, Arial, sans-serif;
-        font-size: 12px;
-        line-height: 1.45;
+        font-size: 11px;
+        line-height: 1.3;
         margin: 0;
       }
       .meta {
-        margin-top: 10px;
+        margin-top: 8px;
         color: var(--muted);
         font-size: 10px;
       }
       @media print {
         .no-print { display: none; }
         .sheet { max-width: none; }
+        body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .sheet { zoom: 0.96; }
         tr, th, td { page-break-inside: avoid; }
       }
     </style>
