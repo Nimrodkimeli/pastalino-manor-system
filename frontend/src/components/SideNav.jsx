@@ -24,7 +24,7 @@ const navItems = [
   { label: "Compliance", path: "/staff", icon: <HealthAndSafetyIcon /> },
   { label: "Appointments", path: "/notes", icon: <EventNoteIcon /> },
   { label: "Policies", path: "/reports", icon: <PolicyIcon /> },
-  { label: "Fire Drills", path: "/fire-drills", icon: <LocalFireDepartmentIcon /> },
+  { label: "Fire Drills", path: "/fire-drills", icon: <LocalFireDepartmentIcon sx={{ color: "#c62828" }} /> },
 ];
 
 export default function SideNav({ children }) {
