@@ -698,6 +698,7 @@ export default function NotesPage() {
     openRecordPrintView({
       title: note.title || "Behavioral Health Note",
       subtitle: "Pastalino Manor LLC - Individual Record Export",
+      noteType: note.type,
       headerLabel: noteTypeLabelMap[note.type] || "Behavioral Health Note",
       organizationName: "Pastalino Manor LLC",
       organizationFontSize: 48,

@@ -45,12 +45,122 @@ function formatNarrativeHtml(body) {
     .join("");
 }
 
+function parseKeyValueText(body) {
+  const entries = [];
+  String(body || "")
+    .split(/\n+/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .forEach((line) => {
+      const dividerIndex = line.indexOf(":");
+      if (dividerIndex > 0) {
+        entries.push({
+          label: line.slice(0, dividerIndex).trim(),
+          value: line.slice(dividerIndex + 1).trim(),
+        });
+      } else {
+        entries.push({ label: "", value: line });
+      }
+    });
+
+  return entries;
+}
+
+function renderSectionBlock(title, fields) {
+  const rows = fields
+    .filter((field) => field.value)
+    .map((field) => {
+      if (!field.label) {
+        return `<p class="paragraph">${escapeHtml(field.value)}</p>`;
+      }
+
+      return `<div class="kv-row"><span class="kv-label">${escapeHtml(field.label)}:</span><span class="kv-value">${escapeHtml(field.value)}</span></div>`;
+    })
+    .join("");
+
+  if (!rows) {
+    return "";
+  }
+
+  return `<section class="section-block"><div class="section-heading">${escapeHtml(title)}</div>${rows}</section>`;
+}
+
+function formatProgressNoteHtml(body) {
+  const entries = parseKeyValueText(body);
+  const lookup = new Map(entries.map((entry) => [entry.label.toLowerCase(), entry.value]));
+  const findValue = (...labels) => {
+    for (const label of labels) {
+      const value = lookup.get(label.toLowerCase());
+      if (value) {
+        return value;
+      }
+    }
+    return "";
+  };
+
+  const sections = [
+    renderSectionBlock("Shift Information", [
+      { label: "Date", value: findValue("Date") },
+      { label: "Shift Coverage", value: findValue("Shift Coverage") },
+      { label: "Shift Hours", value: findValue("Shift Hours") },
+    ]),
+    renderSectionBlock("Medication", [
+      { label: "Did Client Self-Administer Medication?", value: findValue("Did Client Self-Administer Medication?") },
+      { label: "Prompts", value: findValue("Prompts") },
+      { label: "Number of Prompts", value: findValue("Number of Prompts") },
+      { label: "Client Knows Regarding Medications", value: findValue("Client Knows Regarding Medications") },
+      { label: "Does Client Have 7-Day Medication Supply?", value: findValue("Does Client Have 7-Day Medication Supply?") },
+      { label: "Medication Observation", value: findValue("Medication Observation") },
+    ]),
+    renderSectionBlock("ADL / ILS", [
+      { label: "Does Client Complete ADL's?", value: findValue("Does Client Complete ADL's?") },
+      { label: "ADL Prompting/Assistance", value: findValue("ADL Prompting/Assistance") },
+      { label: "PCS Tasks", value: findValue("PCS Tasks") },
+      { label: "ADL Assistance Provided With", value: findValue("ADL Assistance Provided With") },
+      { label: "Did Client Complete ILS?", value: findValue("Did Client Complete ILS?") },
+      { label: "ILS Prompting", value: findValue("ILS Prompting") },
+      { label: "ILS Activity", value: findValue("ILS Activity") },
+    ]),
+    renderSectionBlock("Activities and Appointments", [
+      { label: "Activities Participated In", value: findValue("Activities Participated In") },
+      { label: "Did Client Attend Any Appointment?", value: findValue("Did Client Attend Any Appointment?") },
+      { label: "Appointment Type", value: findValue("Appointment Type") },
+      { label: "Did Client Participate In Counseling?", value: findValue("Did Client Participate In Counseling?") },
+      { label: "If Refused, Reason", value: findValue("If Refused, Reason") },
+    ]),
+    renderSectionBlock("Behavioral Support", [
+      { label: "Behavioral Issues Observed", value: findValue("Behavioral Issues Observed") },
+      { label: "Safety Checks Completed", value: findValue("Safety Checks Completed") },
+      { label: "Behavioral Risk Status", value: findValue("Behavioral Risk Status") },
+      { label: "Hygiene/Nutrition Support", value: findValue("Hygiene/Nutrition Support") },
+      { label: "Shift Handoff Status", value: findValue("Shift Handoff Status") },
+    ]),
+    renderSectionBlock("Shift Notes", [
+      { label: "Day Shift Notes", value: findValue("Day Shift Notes") },
+      { label: "Night Shift Checks", value: findValue("Night Shift Checks") },
+      { label: "Night Shift Notes", value: findValue("Night Shift Notes") },
+      { label: "Compliance and Checks", value: findValue("Compliance and Checks") },
+      { label: "Additional Progress Notes", value: findValue("Additional Progress Notes") },
+    ]),
+  ]
+    .filter(Boolean)
+    .join("");
+
+  const remainingEntries = entries.filter((entry) => !entry.label || !lookup.has(entry.label.toLowerCase()));
+  const fallback = remainingEntries.length
+    ? renderSectionBlock("Narrative", remainingEntries)
+    : "";
+
+  return `${sections}${fallback}` || '<p class="paragraph">No narrative provided.</p>';
+}
+
 export function openRecordPrintView({
   title,
   pageSize = "A4",
   subtitle = "",
   fields = [],
   body = "",
+  noteType = "",
   organizationName = "Pastalino Manor LLC",
   organizationFontSize = 48,
   titleFontSize = 24,
@@ -68,7 +178,9 @@ export function openRecordPrintView({
   const metaLeftText = metaLeftLabel || metaLeftValue ? `${metaLeftLabel ? `${metaLeftLabel}: ` : ""}${metaLeftValue || ""}` : "";
   const metaRightText = metaRightLabel || metaRightValue ? `${metaRightLabel ? `${metaRightLabel}: ` : ""}${metaRightValue || ""}` : "";
   const bodyHtml = renderBodyAsSections
-    ? formatNarrativeHtml(body)
+    ? (noteType === "progress_note" || String(body || "").includes("Shift Coverage:") || String(body || "").includes("Compliance and Checks:")
+      ? formatProgressNoteHtml(body)
+      : formatNarrativeHtml(body))
     : `<pre>${escapeHtml(body)}</pre>`;
 
   const popup = window.open("about:blank", "_blank", "width=980,height=1100");
@@ -189,6 +301,14 @@ export function openRecordPrintView({
         border-radius: 4px;
         padding: 10px;
         margin-bottom: 8px;
+      }
+      .section-heading {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 8px;
+        color: var(--brand);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
       }
       .kv-row {
         display: flex;
