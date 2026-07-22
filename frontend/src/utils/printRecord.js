@@ -19,6 +19,7 @@ export function openRecordPrintView({
   subtitle = "",
   fields = [],
   body = "",
+  headerLabel = "",
   autoPrint = false,
 }) {
   const selectedPageSize = PAGE_SIZE_MAP[pageSize] || PAGE_SIZE_MAP.A4;
@@ -141,7 +142,7 @@ export function openRecordPrintView({
         <button onclick="window.print()">Print / Save PDF</button>
       </div>
       <header class="header">
-        <p class="subtitle" style="margin: 0 0 6px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand);">Pastalino Manor LLC</p>
+        <p class="subtitle" style="margin: 0 0 6px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--brand);">Pastalino Manor LLC${headerLabel ? ` | ${escapeHtml(headerLabel)}` : ""}</p>
         <h1>${escapeHtml(title)}</h1>
         ${subtitle ? `<p class="subtitle">${escapeHtml(subtitle)}</p>` : ""}
       </header>

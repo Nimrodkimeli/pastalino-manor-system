@@ -27,6 +27,13 @@ const noteLabels = {
   chat: "Communication",
 };
 
+const digitallySignedNoteTypes = new Set([
+  "progress_note",
+  "group_note",
+  "counselling_note",
+  "art_meeting",
+]);
+
 function pickDiagnosisGuidance(diagnosisText = "") {
   const normalized = diagnosisText.toLowerCase();
 
@@ -238,6 +245,40 @@ function buildDigitalSignature({ noteId, memberId, staffId, staffName, createdAt
   };
 }
 
+function buildSignedStructuredContent({
+  content,
+  noteDate,
+  durationMinutes,
+  intervention,
+  response,
+  plan,
+  location,
+  riskLevel,
+  digitalSignature,
+}) {
+  const stampedNarrative = [
+    content || "",
+    "",
+    `Time Stamp: ${digitalSignature.signedAt}`,
+    `Digital Signature: ${digitalSignature.signedByName} (${digitalSignature.signedByStaffId})`,
+    `Signature Hash: ${digitalSignature.signatureHash}`,
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  return {
+    noteDate: noteDate || new Date().toISOString(),
+    durationMinutes: durationMinutes || null,
+    intervention: intervention || "",
+    response: response || "",
+    plan: plan || "",
+    location: location || "",
+    riskLevel: riskLevel || "Low",
+    clinicalNarrative: stampedNarrative,
+    digitalSignature,
+  };
+}
+
 router.get("/", async (req, res) => {
   const { memberId, staffId, type, search } = req.query;
   let query = "SELECT * FROM notes WHERE 1=1";
@@ -375,40 +416,35 @@ router.post(
       title,
     });
 
-    const stampedNarrative = [
-      content || "",
-      "",
-      `Time Stamp: ${digitalSignature.signedAt}`,
-      `Digital Signature: ${digitalSignature.signedByName} (${digitalSignature.signedByStaffId})`,
-      `Signature Hash: ${digitalSignature.signatureHash}`,
-    ]
-      .filter(Boolean)
-      .join("\n");
-
-    const structuredContent = {
-      noteDate: noteDate || new Date().toISOString(),
-      durationMinutes: durationMinutes || null,
-      intervention: intervention || "",
-      response: response || "",
-      plan: plan || "",
-      location: location || "",
-      riskLevel: riskLevel || "Low",
-      clinicalNarrative: stampedNarrative,
-      digitalSignature,
-    };
+    const shouldDigitallySign = digitallySignedNoteTypes.has(type);
+    const noteContent = shouldDigitallySign
+      ? JSON.stringify(
+          buildSignedStructuredContent({
+            content,
+            noteDate,
+            durationMinutes,
+            intervention,
+            response,
+            plan,
+            location,
+            riskLevel,
+            digitalSignature,
+          })
+        )
+      : content;
 
     await run(
       `INSERT INTO notes (id, memberId, staffId, type, category, title, content, createdAt, updatedAt)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [id, memberId, authenticatedStaffId, type, category || type, title, JSON.stringify(structuredContent), createdAt, createdAt]
+      [id, memberId, authenticatedStaffId, type, category || type, title, noteContent, createdAt, createdAt]
     );
 
     res.status(201).json({
       id,
       memberId,
       staffId: authenticatedStaffId,
-      signedAt: digitalSignature.signedAt,
-      signatureHash: digitalSignature.signatureHash,
+      signedAt: shouldDigitallySign ? digitalSignature.signedAt : null,
+      signatureHash: shouldDigitallySign ? digitalSignature.signatureHash : null,
       type,
       message: "Note created.",
     });
@@ -428,10 +464,38 @@ router.put(
       return res.status(404).json({ message: "Note not found." });
     }
 
+    const nextType = req.body.type || note.type;
+    const shouldDigitallySign = digitallySignedNoteTypes.has(nextType);
+    const authenticatedStaffId = req.user?.id;
+    const authenticatedStaffName = req.user?.name;
+    const signedAt = Date.now();
+    const digitalSignature = buildDigitalSignature({
+      noteId: note.id,
+      memberId: note.memberId,
+      staffId: authenticatedStaffId,
+      staffName: authenticatedStaffName,
+      createdAt: signedAt,
+      title: req.body.title || note.title,
+    });
+
     const updates = {
       title: req.body.title || note.title,
-      content: req.body.content || note.content,
-      type: req.body.type || note.type,
+      content: shouldDigitallySign
+        ? JSON.stringify(
+            buildSignedStructuredContent({
+              content: req.body.content || note.content,
+              noteDate: req.body.noteDate,
+              durationMinutes: req.body.durationMinutes,
+              intervention: req.body.intervention,
+              response: req.body.response,
+              plan: req.body.plan,
+              location: req.body.location,
+              riskLevel: req.body.riskLevel,
+              digitalSignature,
+            })
+          )
+        : req.body.content || note.content,
+      type: nextType,
       category: req.body.category || note.category,
       updatedAt: Date.now(),
     };

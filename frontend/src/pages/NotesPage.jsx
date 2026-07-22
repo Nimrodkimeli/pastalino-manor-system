@@ -11,6 +11,11 @@ const noteTypes = [
   { value: "art_meeting", label: "Art Meeting" },
 ];
 
+const noteTypeLabelMap = noteTypes.reduce((acc, item) => {
+  acc[item.value] = item.label;
+  return acc;
+}, {});
+
 const durationOptions = Array.from({ length: 48 }, (_, index) => (index + 1) * 15);
 const progressDateOptions = Array.from({ length: 31 }, (_, index) => {
   const date = new Date();
@@ -668,6 +673,7 @@ export default function NotesPage() {
     openRecordPrintView({
       title: note.title || "Behavioral Health Note",
       subtitle: "Pastalino Manor LLC - Individual Record Export",
+      headerLabel: noteTypeLabelMap[note.type] || "Behavioral Health Note",
       pageSize: printPageSize,
       fields: [
         { label: "Type", value: note.type },
