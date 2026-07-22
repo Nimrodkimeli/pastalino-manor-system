@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Box, Button, MenuItem, Paper, Stack, TextField, Typography } from "@mui/material";
 import { useSearchParams } from "react-router-dom";
 import api from "../api";
+import { openRecordPrintView } from "../utils/printRecord";
 
 export default function FaceSheetPage() {
   const [searchParams] = useSearchParams();
@@ -19,6 +20,7 @@ export default function FaceSheetPage() {
     notes: "",
   });
   const [existingNoteId, setExistingNoteId] = useState(null);
+  const [printPageSize, setPrintPageSize] = useState("A4");
 
   const loadMembers = async () => {
     const response = await api.get("/members");
@@ -85,6 +87,26 @@ export default function FaceSheetPage() {
     alert("Face sheet updated successfully.");
   };
 
+  const handlePrintFaceSheet = () => {
+    const selectedMember = members.find((member) => member.id === selectedMemberId);
+    openRecordPrintView({
+      title: `Face Sheet - ${form.fullName || selectedMember?.name || "Client"}`,
+      subtitle: "Pastalino Manor LLC - Individual Record Export",
+      pageSize: printPageSize,
+      fields: [
+        { label: "Member", value: form.fullName || selectedMember?.name || "" },
+        { label: "DOB", value: form.dob },
+        { label: "Guardian", value: form.guardian },
+        { label: "Insurance", value: form.insurance },
+        { label: "Physician", value: form.physician },
+        { label: "Allergies", value: form.allergies },
+        { label: "Diagnosis", value: form.diagnosis },
+      ],
+      body: form.notes || "",
+      autoPrint: true,
+    });
+  };
+
   return (
     <Box>
       <Typography variant="h4" mb={3}>
@@ -111,8 +133,16 @@ export default function FaceSheetPage() {
           <TextField label="Allergies" value={form.allergies} onChange={handleChange("allergies")} />
           <TextField label="Diagnosis" value={form.diagnosis} onChange={handleChange("diagnosis")} />
           <TextField label="Additional notes" value={form.notes} onChange={handleChange("notes")} multiline rows={4} />
+          <TextField select label="Print size" value={printPageSize} onChange={(event) => setPrintPageSize(event.target.value)}>
+            <MenuItem value="A4">A4</MenuItem>
+            <MenuItem value="Letter">Letter</MenuItem>
+            <MenuItem value="Legal">Legal</MenuItem>
+          </TextField>
           <Button variant="contained" onClick={handleSave}>
             Save Face Sheet
+          </Button>
+          <Button variant="outlined" onClick={handlePrintFaceSheet}>
+            Print / PDF Face Sheet
           </Button>
         </Stack>
       </Paper>

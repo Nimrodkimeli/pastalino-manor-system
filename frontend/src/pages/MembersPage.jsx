@@ -23,6 +23,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import api from "../api";
 import { getSession } from "../api";
+import { openRecordPrintView } from "../utils/printRecord";
 
 const symptomOptions = [
   "Denied current symptoms",
@@ -322,6 +323,7 @@ export default function MembersPage() {
   const [incidentMessage, setIncidentMessage] = useState("");
   const [savingClinicalField, setSavingClinicalField] = useState("");
   const [isSavingIncident, setIsSavingIncident] = useState(false);
+  const [printPageSize, setPrintPageSize] = useState("A4");
 
   const openFaceSheetForMember = (memberId) => {
     navigate(`/members/face-sheet?memberId=${encodeURIComponent(memberId)}`);
@@ -1278,11 +1280,195 @@ export default function MembersPage() {
     }
   };
 
+  const handlePrintAssessment = () => {
+    const selectedMember = members.find((member) => member.id === selectedMemberId);
+    const assessmentBody = buildAssessmentValue(
+      selectedMember?.name || "",
+      selectedMember?.dob || "",
+      clinicalForm.assessmentType,
+      clinicalForm.assessmentDate,
+      clinicalForm.assessmentCot,
+      clinicalForm.assessmentExpirationDate,
+      clinicalForm.assessmentCopyInChart,
+      clinicalForm.assessmentClientHistory,
+      clinicalForm.assessmentSymptoms,
+      clinicalForm.assessmentTriggerStatus,
+      clinicalForm.assessmentTriggerType,
+      clinicalForm.assessmentBehavioralHealthHistory,
+      clinicalForm.assessmentSubstanceAbuseHistory,
+      clinicalForm.assessmentCoOccurringDisorders,
+      clinicalForm.assessmentHospitalizations,
+      clinicalForm.assessmentLivingEnvironment,
+      clinicalForm.assessmentLivingEnvironmentDetails,
+      clinicalForm.assessmentMedications,
+      clinicalForm.assessmentMedicalConcerns,
+      clinicalForm.assessmentLegalHistory,
+      clinicalForm.assessmentLegalHistoryDetails,
+      clinicalForm.assessmentGuardianshipInfo,
+      clinicalForm.assessmentGuardianshipDetails,
+      clinicalForm.assessmentMilitaryHistory,
+      clinicalForm.assessmentMilitaryHistoryDetails,
+      clinicalForm.assessmentFamilyHistory,
+      clinicalForm.assessmentFamilyMhSudAbuse,
+      clinicalForm.assessmentTraumaHistory,
+      clinicalForm.assessmentSocialSupport,
+      clinicalForm.assessmentEducationWorkHistory,
+      clinicalForm.assessmentReturnWorkSchool,
+      clinicalForm.assessmentReturnWorkSchoolWhy,
+      clinicalForm.assessmentAllergies,
+      clinicalForm.assessmentRecreationalActivities,
+      clinicalForm.assessmentRecreationalOther,
+      clinicalForm.assessmentCulturalPreferences,
+      clinicalForm.assessmentStrengths,
+      clinicalForm.assessmentRecommendations,
+      clinicalForm.assessmentResidentParticipation,
+      clinicalForm.assessment
+    );
+
+    openRecordPrintView({
+      title: `Assessment - ${selectedMember?.name || "Member"}`,
+      subtitle: "Pastalino Manor LLC - Individual Record Export",
+      pageSize: printPageSize,
+      fields: [
+        { label: "Member", value: selectedMember?.name || "" },
+        { label: "DOB", value: selectedMember?.dob || "" },
+        { label: "Assessment Type", value: clinicalForm.assessmentType },
+        { label: "Assessment Date", value: clinicalForm.assessmentDate },
+      ],
+      body: assessmentBody,
+      autoPrint: true,
+    });
+  };
+
+  const handlePrintTreatmentPlan = () => {
+    const selectedMember = members.find((member) => member.id === selectedMemberId);
+    const treatmentBody = buildTreatmentPlanValue(
+      selectedMember?.name || "",
+      selectedMember?.dob || "",
+      clinicalForm.treatmentPlanType,
+      clinicalForm.treatmentPlanDate,
+      clinicalForm.treatmentPlanRows,
+      clinicalForm.treatmentPlanExtraColumns,
+      clinicalForm.treatmentPlan
+    );
+
+    openRecordPrintView({
+      title: `Treatment Plan - ${selectedMember?.name || "Member"}`,
+      subtitle: "Pastalino Manor LLC - Individual Record Export",
+      pageSize: printPageSize,
+      fields: [
+        { label: "Member", value: selectedMember?.name || "" },
+        { label: "DOB", value: selectedMember?.dob || "" },
+        { label: "Plan Type", value: clinicalForm.treatmentPlanType },
+        { label: "Plan Date", value: clinicalForm.treatmentPlanDate },
+      ],
+      body: treatmentBody,
+      autoPrint: true,
+    });
+  };
+
+  const handlePrintDischargePlanning = () => {
+    const selectedMember = members.find((member) => member.id === selectedMemberId);
+    const dischargeBody = buildDischargePlanningValue(
+      selectedMember?.name || "",
+      selectedMember?.dob || "",
+      clinicalForm.dischargePlanningType,
+      clinicalForm.dischargePlanningDate,
+      {
+        dischargeGender: clinicalForm.dischargeGender,
+        dischargeCoe: clinicalForm.dischargeCoe,
+        dischargeCoeDate: clinicalForm.dischargeCoeDate,
+        dischargeCot: clinicalForm.dischargeCot,
+        dischargeVoluntary: clinicalForm.dischargeVoluntary,
+        dischargeCurrentFacilityInformation: clinicalForm.dischargeCurrentFacilityInformation,
+        dischargeReturningResidence: clinicalForm.dischargeReturningResidence,
+        dischargePsychiatricDiagnosis: clinicalForm.dischargePsychiatricDiagnosis,
+        dischargeMedicalDiagnosis: clinicalForm.dischargeMedicalDiagnosis,
+        dischargeMedications: clinicalForm.dischargeMedications,
+        dischargeIdentifiedStrengths: clinicalForm.dischargeIdentifiedStrengths,
+        dischargeNaturalSupports: clinicalForm.dischargeNaturalSupports,
+        dischargeCulturalPriorities: clinicalForm.dischargeCulturalPriorities,
+        dischargeReadinessHygiene: clinicalForm.dischargeReadinessHygiene,
+        dischargeReadinessMeds: clinicalForm.dischargeReadinessMeds,
+        dischargeReadinessFireSafety: clinicalForm.dischargeReadinessFireSafety,
+        dischargeReadinessMoodStability: clinicalForm.dischargeReadinessMoodStability,
+        dischargeReadinessFamilyInvolved: clinicalForm.dischargeReadinessFamilyInvolved,
+        dischargeRecommendations: clinicalForm.dischargeRecommendations,
+        dischargeAftercareFamilyPeer: clinicalForm.dischargeAftercareFamilyPeer,
+        dischargeAftercareOutpatientTherapies: clinicalForm.dischargeAftercareOutpatientTherapies,
+        dischargeAftercareMedicationManagement: clinicalForm.dischargeAftercareMedicationManagement,
+        dischargeAftercareCommunitySupports: clinicalForm.dischargeAftercareCommunitySupports,
+        dischargeAppointments: clinicalForm.dischargeAppointments,
+        dischargeSignatureClinician: clinicalForm.dischargeSignatureClinician,
+        dischargePrintNameClinician: clinicalForm.dischargePrintNameClinician,
+        dischargeDateClinician: clinicalForm.dischargeDateClinician,
+        dischargeSignatureAdministrator: clinicalForm.dischargeSignatureAdministrator,
+        dischargePrintNameAdministrator: clinicalForm.dischargePrintNameAdministrator,
+        dischargeDateAdministrator: clinicalForm.dischargeDateAdministrator,
+        dischargeParticipationAcknowledged: clinicalForm.dischargeParticipationAcknowledged,
+        dischargeSignatureResident: clinicalForm.dischargeSignatureResident,
+        dischargePrintNameResident: clinicalForm.dischargePrintNameResident,
+        dischargeDateResident: clinicalForm.dischargeDateResident,
+        dischargeSignatureRepresentative: clinicalForm.dischargeSignatureRepresentative,
+        dischargePrintNameRepresentative: clinicalForm.dischargePrintNameRepresentative,
+        dischargeDateRepresentative: clinicalForm.dischargeDateRepresentative,
+      },
+      clinicalForm.dischargePlanning
+    );
+
+    openRecordPrintView({
+      title: `Discharge Planning - ${selectedMember?.name || "Member"}`,
+      subtitle: "Pastalino Manor LLC - Individual Record Export",
+      pageSize: printPageSize,
+      fields: [
+        { label: "Member", value: selectedMember?.name || "" },
+        { label: "DOB", value: selectedMember?.dob || "" },
+        { label: "Plan Type", value: clinicalForm.dischargePlanningType },
+        { label: "Plan Date", value: clinicalForm.dischargePlanningDate },
+      ],
+      body: dischargeBody,
+      autoPrint: true,
+    });
+  };
+
+  const handlePrintIncident = (incident) => {
+    const selectedMember = members.find((member) => member.id === selectedMemberId);
+    const incidentBody = [
+      `Description: ${incident.description || ""}`,
+      `Witnesses: ${incident.witnesses || "-"}`,
+      `Immediate Actions: ${incident.immediateActions || "-"}`,
+      `Notifications: ${incident.notifications || "-"}`,
+      `Follow Up: ${incident.followUp || "-"}`,
+      `Corrective Actions: ${incident.correctiveActions || "-"}`,
+    ].join("\n\n");
+
+    openRecordPrintView({
+      title: `Incident Report - ${selectedMember?.name || "Member"}`,
+      subtitle: "Pastalino Manor LLC - Individual Record Export",
+      pageSize: printPageSize,
+      fields: [
+        { label: "Type", value: incident.incidentType || "General" },
+        { label: "Date", value: incident.incidentDate ? new Date(incident.incidentDate).toLocaleString() : "" },
+        { label: "Member", value: selectedMember?.name || selectedMemberId },
+      ],
+      body: incidentBody,
+      autoPrint: true,
+    });
+  };
+
   return (
     <Box>
       <Typography variant="h4" mb={3}>
         Member Record Center
       </Typography>
+      <FormControl size="small" sx={{ mb: 3, minWidth: 220 }}>
+        <InputLabel id="member-record-print-size-label">Print size</InputLabel>
+        <Select labelId="member-record-print-size-label" value={printPageSize} label="Print size" onChange={(event) => setPrintPageSize(event.target.value)}>
+          <MenuItem value="A4">A4</MenuItem>
+          <MenuItem value="Letter">Letter</MenuItem>
+          <MenuItem value="Legal">Legal</MenuItem>
+        </Select>
+      </FormControl>
 
       {canAddClients && (
         <Paper sx={{ p: 2, mb: 3 }}>
@@ -1882,9 +2068,14 @@ export default function MembersPage() {
               Load Full Assessment Template
             </Button>
 
-            <Button variant="contained" onClick={() => handleSaveClinicalSection("assessment")} disabled={!selectedMemberId || savingClinicalField === "assessment"}>
-              {savingClinicalField === "assessment" ? "Saving..." : "Save Client Assessment"}
-            </Button>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+              <Button variant="contained" onClick={() => handleSaveClinicalSection("assessment")} disabled={!selectedMemberId || savingClinicalField === "assessment"}>
+                {savingClinicalField === "assessment" ? "Saving..." : "Save Client Assessment"}
+              </Button>
+              <Button variant="outlined" onClick={handlePrintAssessment} disabled={!selectedMemberId}>
+                Print / PDF
+              </Button>
+            </Stack>
 
             {clinicalMessages.assessment && <Alert severity="success">{clinicalMessages.assessment}</Alert>}
           </Stack>
@@ -2142,9 +2333,14 @@ export default function MembersPage() {
               </Button>
             </Stack>
 
-            <Button variant="contained" onClick={() => handleSaveClinicalSection("treatmentPlan")} disabled={!selectedMemberId || savingClinicalField === "treatmentPlan"}>
-              {savingClinicalField === "treatmentPlan" ? "Saving..." : "Save Treatment Plan"}
-            </Button>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+              <Button variant="contained" onClick={() => handleSaveClinicalSection("treatmentPlan")} disabled={!selectedMemberId || savingClinicalField === "treatmentPlan"}>
+                {savingClinicalField === "treatmentPlan" ? "Saving..." : "Save Treatment Plan"}
+              </Button>
+              <Button variant="outlined" onClick={handlePrintTreatmentPlan} disabled={!selectedMemberId}>
+                Print / PDF
+              </Button>
+            </Stack>
             {clinicalMessages.treatmentPlan && <Alert severity="success">{clinicalMessages.treatmentPlan}</Alert>}
           </Stack>
         </Paper>
@@ -2562,9 +2758,14 @@ export default function MembersPage() {
               onChange={(event) => setClinicalForm((prev) => ({ ...prev, dischargePlanning: event.target.value }))}
               fullWidth
             />
-            <Button variant="contained" onClick={() => handleSaveClinicalSection("dischargePlanning")} disabled={!selectedMemberId || savingClinicalField === "dischargePlanning"}>
-              {savingClinicalField === "dischargePlanning" ? "Saving..." : "Save Discharge Planning"}
-            </Button>
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+              <Button variant="contained" onClick={() => handleSaveClinicalSection("dischargePlanning")} disabled={!selectedMemberId || savingClinicalField === "dischargePlanning"}>
+                {savingClinicalField === "dischargePlanning" ? "Saving..." : "Save Discharge Planning"}
+              </Button>
+              <Button variant="outlined" onClick={handlePrintDischargePlanning} disabled={!selectedMemberId}>
+                Print / PDF
+              </Button>
+            </Stack>
             {clinicalMessages.dischargePlanning && <Alert severity="success">{clinicalMessages.dischargePlanning}</Alert>}
           </Stack>
         </Paper>
@@ -2687,6 +2888,7 @@ export default function MembersPage() {
               <TableCell>Date</TableCell>
               <TableCell>Description</TableCell>
               <TableCell>Witnesses</TableCell>
+              <TableCell>Record Export</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -2696,11 +2898,16 @@ export default function MembersPage() {
                 <TableCell>{incident.incidentDate ? new Date(incident.incidentDate).toLocaleString() : "-"}</TableCell>
                 <TableCell>{incident.description}</TableCell>
                 <TableCell>{incident.witnesses || "-"}</TableCell>
+                <TableCell>
+                  <Button size="small" variant="outlined" onClick={() => handlePrintIncident(incident)}>
+                    Print / PDF
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
             {incidents.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4}>No incidents for selected member.</TableCell>
+                <TableCell colSpan={5}>No incidents for selected member.</TableCell>
               </TableRow>
             )}
           </TableBody>

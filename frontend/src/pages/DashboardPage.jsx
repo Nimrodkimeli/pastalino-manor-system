@@ -20,6 +20,7 @@ import {
   Typography,
 } from "@mui/material";
 import api from "../api";
+import { openRecordPrintView } from "../utils/printRecord";
 
 const REMINDER_CHANNEL_OPTIONS = ["email", "sms"];
 
@@ -94,6 +95,7 @@ export default function DashboardPage() {
   const [calendarMonth, setCalendarMonth] = useState(new Date());
   const [editingAppointmentId, setEditingAppointmentId] = useState(null);
   const [appointmentStatus, setAppointmentStatus] = useState(null);
+  const [printPageSize, setPrintPageSize] = useState("A4");
   const [censusForm, setCensusForm] = useState({
     houseName: "",
     censusDate: new Date().toISOString().split("T")[0],
@@ -215,6 +217,25 @@ export default function DashboardPage() {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handlePrintCensusEntry = (entry) => {
+    openRecordPrintView({
+      title: `Daily Census - ${entry.houseName}`,
+      subtitle: "Pastalino Manor LLC - Individual Record Export",
+      pageSize: printPageSize,
+      fields: [
+        { label: "Date", value: entry.censusDate },
+        { label: "Staff", value: entry.staffName },
+        { label: "House", value: entry.houseName },
+        { label: "Client Names", value: entry.clientNames || "-" },
+        { label: "Total Members", value: entry.memberCount },
+        { label: "Present", value: entry.presentCount },
+        { label: "Absent", value: entry.absentCount },
+      ],
+      body: entry.notes || "",
+      autoPrint: true,
+    });
   };
 
   const handleMemberSelection = (event) => {
@@ -662,9 +683,19 @@ export default function DashboardPage() {
           <Typography variant="h6">
             Daily census by house
           </Typography>
-          <Button variant="outlined" onClick={handlePrint}>
-            Print census report
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <FormControl size="small" sx={{ minWidth: 140 }}>
+              <InputLabel id="census-print-size-label">Print size</InputLabel>
+              <Select labelId="census-print-size-label" value={printPageSize} label="Print size" onChange={(event) => setPrintPageSize(event.target.value)}>
+                <MenuItem value="A4">A4</MenuItem>
+                <MenuItem value="Letter">Letter</MenuItem>
+                <MenuItem value="Legal">Legal</MenuItem>
+              </Select>
+            </FormControl>
+            <Button variant="outlined" onClick={handlePrint}>
+              Print census report
+            </Button>
+          </Stack>
         </Stack>
         <Paper sx={{ p: 3, "@media print": { boxShadow: "none", border: "1px solid #ddd" } }}>
           <Box component="form" onSubmit={handleCensusSubmit}>
@@ -767,6 +798,7 @@ export default function DashboardPage() {
                 <TableCell>Members</TableCell>
                 <TableCell>Present</TableCell>
                 <TableCell>Absent</TableCell>
+                <TableCell>Record Export</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -779,6 +811,11 @@ export default function DashboardPage() {
                   <TableCell>{entry.memberCount}</TableCell>
                   <TableCell>{entry.presentCount}</TableCell>
                   <TableCell>{entry.absentCount}</TableCell>
+                  <TableCell>
+                    <Button size="small" variant="outlined" onClick={() => handlePrintCensusEntry(entry)}>
+                      Print / PDF
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

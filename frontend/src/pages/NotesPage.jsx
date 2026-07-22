@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Paper, Stack, Table, TableBody, TableCell, TableHead, TableRow, TextField, Typography, Select, FormControl, InputLabel, Checkbox, FormControlLabel } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import api, { clearSession, getSession } from "../api";
+import { openRecordPrintView } from "../utils/printRecord";
 
 const noteTypes = [
   { value: "group_note", label: "Group Note" },
@@ -259,6 +260,75 @@ const formatDurationLabel = (minutes) => {
   return `${hourLabel} ${remainingMinutes} minutes`;
 };
 
+const createInitialForm = (memberId = "", staffId = "") => ({
+  memberId,
+  staffId,
+  type: "counselling_note",
+  title: "",
+  content: "",
+  clinicalTeamPresent: "",
+  noteDate: "",
+  durationMinutes: "",
+  location: "",
+  riskLevel: "Low",
+  groupMembers: [],
+  sessionFocus: "",
+  presentingProblem: "",
+  appearance: "",
+  behavior: "",
+  mood: "",
+  affect: "",
+  speech: "",
+  thoughtProcess: "",
+  cognition: "",
+  insight: "",
+  judgment: "",
+  interventionsUsed: "",
+  clientResponse: "",
+  progressTowardsGoals: "",
+  planNextSteps: "",
+  shiftCoverage: "",
+  shiftHours: "",
+  didSelfAdminMedication: "",
+  medicationPrompting: "",
+  medicationPromptCount: "",
+  medKnowledgeName: false,
+  medKnowledgeDose: false,
+  medKnowledgeSideEffect: false,
+  medKnowledgePurpose: false,
+  medKnowledgeNone: false,
+  hasSevenDayMedicationSupply: "",
+  completesAdls: "",
+  adlPrompting: "",
+  adlTask1: "",
+  adlTask2: "",
+  adlTask3: "",
+  adlAssistanceType: "",
+  completesIls: "",
+  ilsPrompting: "",
+  ilsActivity: "",
+  participatedActivity: "",
+  attendedAppointment: "",
+  appointmentType: "",
+  counsellingParticipation: "",
+  refusalReason: "",
+  behavioralIssues: [],
+  behavioralIssueOther: "",
+  dayShiftNotes: "",
+  nightShiftNotes: "",
+  nightCheck10pm: "",
+  nightCheck12am: "",
+  nightCheck2am: "",
+  nightCheck4am: "",
+  nightCheck6am: "",
+  safetyCheckStatus: "",
+  medicationObservation: "",
+  behavioralRiskStatus: "",
+  hygieneNutritionStatus: "",
+  handoffStatus: "",
+  additionalProgressNotes: "",
+});
+
 export default function NotesPage() {
   const navigate = useNavigate();
   const session = getSession();
@@ -279,20 +349,30 @@ export default function NotesPage() {
   const [selectedDeviceId, setSelectedDeviceId] = useState("");
   const [audioBlob, setAudioBlob] = useState(null);
   const [audioUrl, setAudioUrl] = useState("");
+  const [printPageSize, setPrintPageSize] = useState("A4");
   const recognitionRef = useRef(null);
   const mediaRecorderRef = useRef(null);
   const activeStreamRef = useRef(null);
   const audioChunksRef = useRef([]);
-  const [form, setForm] = useState({ memberId: "member-1", staffId: "user-staff-1", type: "counselling_note", title: "", content: "", clinicalTeamPresent: "", noteDate: "", durationMinutes: "", location: "", riskLevel: "Low", groupMembers: [], sessionFocus: "", presentingProblem: "", appearance: "", behavior: "", mood: "", affect: "", speech: "", thoughtProcess: "", cognition: "", insight: "", judgment: "", interventionsUsed: "", clientResponse: "", progressTowardsGoals: "", planNextSteps: "", shiftCoverage: "", shiftHours: "", didSelfAdminMedication: "", medicationPrompting: "", medicationPromptCount: "", medKnowledgeName: false, medKnowledgeDose: false, medKnowledgeSideEffect: false, medKnowledgePurpose: false, medKnowledgeNone: false, hasSevenDayMedicationSupply: "", completesAdls: "", adlPrompting: "", adlTask1: "", adlTask2: "", adlTask3: "", adlAssistanceType: "", completesIls: "", ilsPrompting: "", ilsActivity: "", participatedActivity: "", attendedAppointment: "", appointmentType: "", counsellingParticipation: "", refusalReason: "", behavioralIssues: [], behavioralIssueOther: "", dayShiftNotes: "", nightShiftNotes: "", nightCheck10pm: "", nightCheck12am: "", nightCheck2am: "", nightCheck4am: "", nightCheck6am: "", safetyCheckStatus: "", medicationObservation: "", behavioralRiskStatus: "", hygieneNutritionStatus: "", handoffStatus: "", additionalProgressNotes: "" });
+  const [form, setForm] = useState(() => createInitialForm("", session?.id || "user-staff-1"));
   const isArtMeeting = form.type === "art_meeting";
   const isProgressNote = form.type === "progress_note";
 
   const loadMembers = async () => {
     const response = await api.get("/members");
     setMembers(response.data);
-    if (!form.memberId && response.data[0]) {
-      setForm((prev) => ({ ...prev, memberId: response.data[0].id }));
-    }
+    setForm((prev) => {
+      if (!response.data.length) {
+        return prev;
+      }
+
+      const selectedMemberExists = response.data.some((member) => member.id === prev.memberId);
+      if (selectedMemberExists) {
+        return prev;
+      }
+
+      return { ...prev, memberId: response.data[0].id };
+    });
   };
 
   const loadNotes = async (memberId = form.memberId) => {
@@ -561,6 +641,39 @@ export default function NotesPage() {
     window.print();
   };
 
+  const extractNoteText = (note) => {
+    if (!note?.content) {
+      return "";
+    }
+
+    try {
+      const parsed = JSON.parse(note.content);
+      if (parsed?.clinicalNarrative) {
+        return parsed.clinicalNarrative;
+      }
+      return JSON.stringify(parsed, null, 2);
+    } catch {
+      return note.content;
+    }
+  };
+
+  const handlePrintNote = (note) => {
+    const memberName = members.find((member) => member.id === note.memberId)?.name || note.memberId;
+    openRecordPrintView({
+      title: note.title || "Behavioral Health Note",
+      subtitle: "Pastalino Manor LLC - Individual Record Export",
+      pageSize: printPageSize,
+      fields: [
+        { label: "Type", value: note.type },
+        { label: "Member", value: memberName },
+        { label: "Writer", value: note.staffId },
+        { label: "Created", value: note.createdAt ? new Date(note.createdAt).toLocaleString() : "" },
+      ],
+      body: extractNoteText(note),
+      autoPrint: true,
+    });
+  };
+
   const handleAiDraft = async () => {
     setAiError("");
     setAiLoading(true);
@@ -747,7 +860,7 @@ export default function NotesPage() {
     setSpeechError("");
     setAudioBlob(null);
     setAudioUrl("");
-    setForm((prev) => ({ ...prev, title: "", content: "", clinicalTeamPresent: "", noteDate: "", durationMinutes: "", location: "", riskLevel: "Low", groupMembers: [], sessionFocus: "", presentingProblem: "", appearance: "", behavior: "", mood: "", affect: "", speech: "", thoughtProcess: "", cognition: "", insight: "", judgment: "", interventionsUsed: "", clientResponse: "", progressTowardsGoals: "", planNextSteps: "", shiftCoverage: "", shiftHours: "", didSelfAdminMedication: "", medicationPrompting: "", medicationPromptCount: "", medKnowledgeName: false, medKnowledgeDose: false, medKnowledgeSideEffect: false, medKnowledgePurpose: false, medKnowledgeNone: false, hasSevenDayMedicationSupply: "", completesAdls: "", adlPrompting: "", adlTask1: "", adlTask2: "", adlTask3: "", adlAssistanceType: "", completesIls: "", ilsPrompting: "", ilsActivity: "", participatedActivity: "", attendedAppointment: "", appointmentType: "", counsellingParticipation: "", refusalReason: "", behavioralIssues: [], behavioralIssueOther: "", dayShiftNotes: "", nightShiftNotes: "", nightCheck10pm: "", nightCheck12am: "", nightCheck2am: "", nightCheck4am: "", nightCheck6am: "", safetyCheckStatus: "", medicationObservation: "", behavioralRiskStatus: "", hygieneNutritionStatus: "", handoffStatus: "", additionalProgressNotes: "" }));
+    setForm(createInitialForm(form.memberId, form.staffId));
     loadNotes(form.memberId);
   };
 
@@ -768,6 +881,14 @@ export default function NotesPage() {
         <Typography variant="h6" mb={2}>
           Notes for {members.find((member) => member.id === form.memberId)?.name || "selected member"}
         </Typography>
+        <FormControl size="small" sx={{ mb: 2, minWidth: 200 }}>
+          <InputLabel id="notes-print-size-label">Print size</InputLabel>
+          <Select labelId="notes-print-size-label" value={printPageSize} label="Print size" onChange={(event) => setPrintPageSize(event.target.value)}>
+            <MenuItem value="A4">A4</MenuItem>
+            <MenuItem value="Letter">Letter</MenuItem>
+            <MenuItem value="Legal">Legal</MenuItem>
+          </Select>
+        </FormControl>
         <FormControl fullWidth sx={{ mb: 2 }}>
           <InputLabel id="member-notes-select-label">Select member</InputLabel>
           <Select labelId="member-notes-select-label" value={form.memberId} label="Select member" onChange={handleChange("memberId")}>
@@ -786,6 +907,7 @@ export default function NotesPage() {
               <TableCell>Member</TableCell>
               <TableCell>Writer</TableCell>
               <TableCell>Created</TableCell>
+              <TableCell>Record Export</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -796,6 +918,11 @@ export default function NotesPage() {
                 <TableCell>{note.memberId}</TableCell>
                 <TableCell>{note.staffId}</TableCell>
                 <TableCell>{note.createdAt ? new Date(note.createdAt).toLocaleString() : "-"}</TableCell>
+                <TableCell>
+                  <Button size="small" variant="outlined" onClick={() => handlePrintNote(note)}>
+                    Print / PDF
+                  </Button>
+                </TableCell>
               </TableRow>
             ))}
           </TableBody>
