@@ -882,6 +882,121 @@ export default function NotesPage() {
     setAiError("");
   };
 
+  const buildStructuredContentForPrint = (currentForm) => {
+    const mentalStatusSummary = mentalStatusFields
+      .map(({ key, label }) => (currentForm[key] ? `${label}: ${currentForm[key]}` : ""))
+      .filter(Boolean)
+      .join("; ");
+
+    const progressChecksSummary = progressCheckFields
+      .map(({ key, label }) => (currentForm[key] ? `${label}: ${currentForm[key]}` : ""))
+      .filter(Boolean)
+      .join("; ");
+
+    const medicationKnowledgeSummary = [
+      currentForm.medKnowledgeName ? "Name" : "",
+      currentForm.medKnowledgeDose ? "Dose" : "",
+      currentForm.medKnowledgeSideEffect ? "Side Effect" : "",
+      currentForm.medKnowledgePurpose ? "Purpose of Medication" : "",
+      currentForm.medKnowledgeNone ? "None" : "",
+    ].filter(Boolean).join(", ");
+
+    const adlTaskSummary = [currentForm.adlTask1, currentForm.adlTask2, currentForm.adlTask3].filter(Boolean).join(", ");
+    const behavioralIssuesSummary = [
+      ...currentForm.behavioralIssues,
+      currentForm.behavioralIssueOther ? `Other: ${currentForm.behavioralIssueOther}` : "",
+    ].filter(Boolean).join(", ");
+    const nightShiftChecksSummary = nightShiftCheckFields
+      .map(({ key, label }) => (currentForm[key] ? `${label}: ${currentForm[key]}` : ""))
+      .filter(Boolean)
+      .join("; ");
+
+    return currentForm.type === "art_meeting"
+      ? [
+        currentForm.clinicalTeamPresent ? `Clinical Team Present: ${currentForm.clinicalTeamPresent}` : "",
+        currentForm.content ? `Summary of the Meeting: ${currentForm.content}` : "",
+      ].filter(Boolean).join("\n\n")
+      : currentForm.type === "progress_note"
+        ? [
+          `Date: ${currentForm.noteDate || new Date().toISOString().slice(0, 10)}`,
+          currentForm.shiftHours ? `Shift Hours: ${currentForm.shiftHours}` : "",
+          `Shift Coverage: ${currentForm.shiftCoverage || "Not documented"}`,
+          currentForm.didSelfAdminMedication ? `Did Client Self-Administer Medication?: ${currentForm.didSelfAdminMedication}` : "",
+          currentForm.medicationPrompting ? `Prompts: ${currentForm.medicationPrompting}` : "",
+          currentForm.medicationPromptCount ? `Number of Prompts: ${currentForm.medicationPromptCount}` : "",
+          medicationKnowledgeSummary ? `Client Knows Regarding Medications: ${medicationKnowledgeSummary}` : "",
+          currentForm.hasSevenDayMedicationSupply ? `Does Client Have 7-Day Medication Supply?: ${currentForm.hasSevenDayMedicationSupply}` : "",
+          currentForm.completesAdls ? `Does Client Complete ADL's?: ${currentForm.completesAdls}` : "",
+          currentForm.adlPrompting ? `ADL Prompting/Assistance: ${currentForm.adlPrompting}` : "",
+          adlTaskSummary ? `PCS Tasks: ${adlTaskSummary}` : "",
+          currentForm.adlAssistanceType ? `ADL Assistance Provided With: ${currentForm.adlAssistanceType}` : "",
+          currentForm.completesIls ? `Did Client Complete ILS?: ${currentForm.completesIls}` : "",
+          currentForm.ilsPrompting ? `ILS Prompting: ${currentForm.ilsPrompting}` : "",
+          currentForm.ilsActivity ? `ILS Activity: ${currentForm.ilsActivity}` : "",
+          currentForm.participatedActivity ? `Activities Participated In: ${currentForm.participatedActivity}` : "",
+          currentForm.attendedAppointment ? `Did Client Attend Any Appointment?: ${currentForm.attendedAppointment}` : "",
+          currentForm.appointmentType ? `Appointment Type: ${currentForm.appointmentType}` : "",
+          currentForm.counsellingParticipation ? `Did Client Participate In Counseling?: ${currentForm.counsellingParticipation}` : "",
+          currentForm.refusalReason ? `If Refused, Reason: ${currentForm.refusalReason}` : "",
+          behavioralIssuesSummary ? `Behavioral Issues Observed: ${behavioralIssuesSummary}` : "",
+          currentForm.dayShiftNotes ? `Day Shift Notes: ${currentForm.dayShiftNotes}` : "",
+          nightShiftChecksSummary ? `Night Shift Checks: ${nightShiftChecksSummary}` : "",
+          currentForm.nightShiftNotes ? `Night Shift Notes: ${currentForm.nightShiftNotes}` : "",
+          progressChecksSummary ? `Compliance and Checks: ${progressChecksSummary}` : "",
+          currentForm.additionalProgressNotes ? `Additional Progress Notes: ${currentForm.additionalProgressNotes}` : "",
+        ].filter(Boolean).join("\n\n")
+        : [
+          currentForm.content ? `Mental Status: ${currentForm.content}` : "",
+          mentalStatusSummary ? `Mental Status Details: ${mentalStatusSummary}` : "",
+          currentForm.sessionFocus ? `Session Focus/Goal: ${currentForm.sessionFocus}` : "",
+          currentForm.presentingProblem ? `Presenting Problem: ${currentForm.presentingProblem}` : "",
+          currentForm.interventionsUsed ? `Interventions Used: ${currentForm.interventionsUsed}` : "",
+          currentForm.clientResponse ? `Client's Response: ${currentForm.clientResponse}` : "",
+          currentForm.progressTowardsGoals ? `Progress Towards Goals: ${currentForm.progressTowardsGoals}` : "",
+          currentForm.planNextSteps ? `Plan/Next Step: ${currentForm.planNextSteps}` : "",
+          currentForm.type === "group_note"
+            ? `Group attendees: ${currentForm.groupMembers.map((id) => members.find((member) => member.id === id)?.name || id).join(", ") || "None selected"}`
+            : "",
+        ].filter(Boolean).join("\n\n");
+  };
+
+  const handlePrintCurrentDraft = () => {
+    const nextMemberId = form.memberId || members[0]?.id || "";
+    const selectedMember = members.find((member) => member.id === nextMemberId);
+
+    openRecordPrintView({
+      title: form.title || noteTypeLabelMap[form.type] || "Behavioral Health Note",
+      subtitle: "Pastalino Manor LLC - Draft Note Preview",
+      noteType: form.type,
+      headerLabel: noteTypeLabelMap[form.type] || "Behavioral Health Note",
+      organizationName: "Pastalino Manor LLC",
+      organizationFontSize: 48,
+      titleFontSize: 24,
+      metaLeftLabel: "Member Name",
+      metaLeftValue: selectedMember?.name || "",
+      metaRightLabel: "Date of Birth",
+      metaRightValue: selectedMember?.dob || "",
+      renderBodyAsSections: true,
+      pageSize: printPageSize,
+      body: buildStructuredContentForPrint(form),
+    });
+  };
+
+  const handlePrintEditedNote = () => {
+    openRecordPrintView({
+      title: editTitle || noteTypeLabelMap[editType] || "Behavioral Health Note",
+      subtitle: "Pastalino Manor LLC - Draft Note Preview",
+      noteType: editType,
+      headerLabel: noteTypeLabelMap[editType] || "Behavioral Health Note",
+      organizationName: "Pastalino Manor LLC",
+      organizationFontSize: 48,
+      titleFontSize: 24,
+      renderBodyAsSections: true,
+      pageSize: printPageSize,
+      body: editContent,
+    });
+  };
+
   const handleSubmit = async () => {
     setSaveError("");
 
@@ -1108,6 +1223,7 @@ export default function NotesPage() {
           </Stack>
         </DialogContent>
         <DialogActions>
+          <Button onClick={handlePrintEditedNote}>Print Draft</Button>
           <Button onClick={() => setIsEditOpen(false)}>Cancel</Button>
           <Button variant="contained" onClick={handleSaveEditedNote} disabled={!editContent.trim()}>
             Save Changes
@@ -1292,6 +1408,9 @@ export default function NotesPage() {
                   </Button>
                   <Button variant="outlined" color="error" onClick={handleClearAiDraft} disabled={!aiDraft && !aiPrompt}>
                     Clear AI Notes
+                  </Button>
+                  <Button variant="outlined" onClick={handlePrintCurrentDraft} disabled={!form.memberId}>
+                    Print Draft
                   </Button>
                 </Stack>
                 {aiError && <Typography color="error" variant="body2">{aiError}</Typography>}
