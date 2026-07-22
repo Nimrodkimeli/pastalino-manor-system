@@ -140,24 +140,31 @@ function formatProgressNoteHtml(body) {
     ]),
     renderSectionBlock("ADL / ILS", [
       { label: "Does Client Complete ADL's?", value: findValue("Does Client Complete ADL's?") },
+    ]) + renderInlineFieldRow([
       { label: "ADL Prompting/Assistance", value: findValue("ADL Prompting/Assistance") },
       { label: "PCS Tasks", value: findValue("PCS Tasks") },
+    ]) + renderInlineFieldRow([
       { label: "ADL Assistance Provided With", value: findValue("ADL Assistance Provided With") },
       { label: "Did Client Complete ILS?", value: findValue("Did Client Complete ILS?") },
+    ]) + renderInlineFieldRow([
       { label: "ILS Prompting", value: findValue("ILS Prompting") },
       { label: "ILS Activity", value: findValue("ILS Activity") },
     ]),
     renderSectionBlock("Activities and Appointments", [
       { label: "Activities Participated In", value: findValue("Activities Participated In") },
+    ]) + renderInlineFieldRow([
       { label: "Did Client Attend Any Appointment?", value: findValue("Did Client Attend Any Appointment?") },
       { label: "Appointment Type", value: findValue("Appointment Type") },
+    ]) + renderInlineFieldRow([
       { label: "Did Client Participate In Counseling?", value: findValue("Did Client Participate In Counseling?") },
       { label: "If Refused, Reason", value: findValue("If Refused, Reason") },
     ]),
     renderSectionBlock("Behavioral Support", [
       { label: "Behavioral Issues Observed", value: findValue("Behavioral Issues Observed") },
+    ]) + renderInlineFieldRow([
       { label: "Safety Checks Completed", value: findValue("Safety Checks Completed") },
       { label: "Behavioral Risk Status", value: findValue("Behavioral Risk Status") },
+    ]) + renderInlineFieldRow([
       { label: "Hygiene/Nutrition Support", value: findValue("Hygiene/Nutrition Support") },
       { label: "Shift Handoff Status", value: findValue("Shift Handoff Status") },
     ]),
@@ -346,6 +353,9 @@ export function openRecordPrintView({
       .inline-value {
         min-width: 0;
         flex: 1;
+      }
+      .inline-value, .kv-value {
+        line-height: 1.45;
       }
       .section-heading {
         font-size: 13px;
