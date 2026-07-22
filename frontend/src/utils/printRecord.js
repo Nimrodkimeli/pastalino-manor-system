@@ -100,6 +100,15 @@ function renderSectionBlock(title, fields) {
   return `<section class="section-block"><div class="section-heading">${escapeHtml(title)}</div>${rows}</section>`;
 }
 
+function renderInlineFieldRow(fields) {
+  const items = fields
+    .filter((field) => field.value)
+    .map((field) => `<div class="inline-field"><span class="inline-label">${escapeHtml(field.label)}:</span><span class="inline-value">${escapeHtml(field.value)}</span></div>`)
+    .join("");
+
+  return items ? `<div class="inline-row">${items}</div>` : "";
+}
+
 function formatProgressNoteHtml(body) {
   const entries = parseKeyValueText(body);
   const lookup = new Map(entries.map((entry) => [entry.label.toLowerCase(), entry.value]));
@@ -121,8 +130,10 @@ function formatProgressNoteHtml(body) {
     ]),
     renderSectionBlock("Medication", [
       { label: "Did Client Self-Administer Medication?", value: findValue("Did Client Self-Administer Medication?") },
+    ]) + renderInlineFieldRow([
       { label: "Prompts", value: findValue("Prompts") },
       { label: "Number of Prompts", value: findValue("Number of Prompts") },
+    ]) + renderSectionBlock("Medication Details", [
       { label: "Client Knows Regarding Medications", value: findValue("Client Knows Regarding Medications") },
       { label: "Does Client Have 7-Day Medication Supply?", value: findValue("Does Client Have 7-Day Medication Supply?") },
       { label: "Medication Observation", value: findValue("Medication Observation") },
@@ -314,6 +325,27 @@ export function openRecordPrintView({
         border-radius: 4px;
         padding: 10px;
         margin-bottom: 8px;
+      }
+      .inline-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px 18px;
+        margin: 0 0 8px;
+      }
+      .inline-field {
+        display: flex;
+        align-items: baseline;
+        gap: 6px;
+        flex: 1 1 220px;
+        min-width: 220px;
+      }
+      .inline-label {
+        font-weight: 700;
+        white-space: nowrap;
+      }
+      .inline-value {
+        min-width: 0;
+        flex: 1;
       }
       .section-heading {
         font-size: 13px;
