@@ -334,6 +334,7 @@ export default function NotesPage() {
   const session = getSession();
   const staffDisplayName = session?.name || "Staff";
   const [notes, setNotes] = useState([]);
+  const [expandedNoteId, setExpandedNoteId] = useState(null);
   const [members, setMembers] = useState([]);
   const [staffProfile, setStaffProfile] = useState(null);
   const [open, setOpen] = useState(false);
@@ -673,6 +674,10 @@ export default function NotesPage() {
     });
   };
 
+  const handleToggleNoteExpansion = (noteId) => {
+    setExpandedNoteId((prev) => (prev === noteId ? null : noteId));
+  };
+
   const handleAiDraft = async () => {
     setAiError("");
     setAiLoading(true);
@@ -906,24 +911,42 @@ export default function NotesPage() {
               <TableCell>Member</TableCell>
               <TableCell>Writer</TableCell>
               <TableCell>Created</TableCell>
+              <TableCell>Preview</TableCell>
               <TableCell>Record Export</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {notes.map((note) => (
-              <TableRow key={note.id}>
-                <TableCell>{note.type === "group_note" ? "Group Note" : note.type === "counselling_note" ? "Individual Counseling" : note.type}</TableCell>
-                <TableCell>{note.title}</TableCell>
-                <TableCell>{note.memberId}</TableCell>
-                <TableCell>{note.staffId}</TableCell>
-                <TableCell>{note.createdAt ? new Date(note.createdAt).toLocaleString() : "-"}</TableCell>
-                <TableCell>
-                  <Button size="small" variant="outlined" onClick={() => handlePrintNote(note)}>
-                    Read / Print
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
+            {notes.map((note) => [
+                <TableRow key={`${note.id}-row`}>
+                  <TableCell>{note.type === "group_note" ? "Group Note" : note.type === "counselling_note" ? "Individual Counseling" : note.type}</TableCell>
+                  <TableCell>{note.title}</TableCell>
+                  <TableCell>{note.memberId}</TableCell>
+                  <TableCell>{note.staffId}</TableCell>
+                  <TableCell>{note.createdAt ? new Date(note.createdAt).toLocaleString() : "-"}</TableCell>
+                  <TableCell>
+                    <Button size="small" variant="outlined" onClick={() => handleToggleNoteExpansion(note.id)}>
+                      {expandedNoteId === note.id ? "Minimize" : "Expand"}
+                    </Button>
+                  </TableCell>
+                  <TableCell>
+                    <Button size="small" variant="outlined" onClick={() => handlePrintNote(note)}>
+                      Read / Print
+                    </Button>
+                  </TableCell>
+                </TableRow>,
+                expandedNoteId === note.id ? (
+                  <TableRow key={`${note.id}-expanded`}>
+                    <TableCell colSpan={7}>
+                      <Paper variant="outlined" sx={{ p: 2, backgroundColor: "#fafafa" }}>
+                        <Typography variant="subtitle2" mb={1}>Note Preview</Typography>
+                        <Typography variant="body2" sx={{ whiteSpace: "pre-wrap" }}>
+                          {extractNoteText(note) || "No note content."}
+                        </Typography>
+                      </Paper>
+                    </TableCell>
+                  </TableRow>
+                ) : null,
+            ])}
           </TableBody>
         </Table>
       </Paper>

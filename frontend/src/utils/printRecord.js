@@ -32,7 +32,7 @@ export function openRecordPrintView({
     })
     .join("");
 
-  const popup = window.open("", "_blank", "noopener,noreferrer,width=980,height=1100");
+  const popup = window.open("about:blank", "_blank", "width=980,height=1100");
   if (!popup) {
     alert("Popup blocked. Please allow popups to print this record.");
     return;
@@ -163,9 +163,33 @@ export function openRecordPrintView({
   </body>
 </html>`;
 
-  popup.document.open();
-  popup.document.write(html);
-  popup.document.close();
+  let rendered = false;
+
+  try {
+    popup.document.open();
+    popup.document.write(html);
+    popup.document.close();
+    rendered = true;
+  } catch {
+    rendered = false;
+  }
+
+  // Fallback for browsers that restrict popup document writing.
+  if (!rendered) {
+    try {
+      const encoded = encodeURIComponent(html);
+      popup.location.replace(`data:text/html;charset=utf-8,${encoded}`);
+      rendered = true;
+    } catch {
+      rendered = false;
+    }
+  }
+
+  if (!rendered) {
+    alert("Unable to render preview in this browser window. Please try again.");
+    popup.close();
+    return;
+  }
 
   if (autoPrint) {
     popup.onload = () => {
