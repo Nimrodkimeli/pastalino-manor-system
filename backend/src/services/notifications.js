@@ -6,6 +6,27 @@ const { getSmtpProviderStatus, sendMailMessage } = require("./email");
 const logDirectory = path.join(__dirname, "..", "..", "data");
 const logFile = path.join(logDirectory, "notification.log");
 
+function normalizePhoneNumber(value) {
+  const rawValue = String(value || "").trim();
+  if (!rawValue) {
+    return "";
+  }
+
+  if (rawValue.startsWith("+")) {
+    return rawValue;
+  }
+
+  const digits = rawValue.replace(/\D/g, "");
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return `+${digits}`;
+  }
+
+  return rawValue;
+}
+
 function hasTwilioConfig() {
   return Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER);
 }
@@ -53,8 +74,8 @@ async function sendSmsNotification({ to, message }) {
   }
 
   const response = await client.messages.create({
-    to,
-    from: process.env.TWILIO_PHONE_NUMBER,
+    to: normalizePhoneNumber(to),
+    from: normalizePhoneNumber(process.env.TWILIO_PHONE_NUMBER),
     body: message,
   });
 
@@ -84,10 +105,10 @@ function getNotificationProviderStatus() {
     },
     sms: {
       configured: twilioConfigured,
-      from: process.env.TWILIO_PHONE_NUMBER || "",
+      from: normalizePhoneNumber(process.env.TWILIO_PHONE_NUMBER),
       mode: twilioConfigured ? "twilio" : "log-fallback",
       summary: twilioConfigured
-        ? `Twilio SMS from ${process.env.TWILIO_PHONE_NUMBER}`
+        ? `Twilio SMS from ${normalizePhoneNumber(process.env.TWILIO_PHONE_NUMBER)}`
         : "Writes SMS reminders to notification.log",
     },
     logFile,
@@ -108,7 +129,7 @@ async function verifySmsProvider() {
     accountSid: account.sid,
     friendlyName: account.friendlyName || "",
     status: account.status || "",
-    from: process.env.TWILIO_PHONE_NUMBER || "",
+    from: normalizePhoneNumber(process.env.TWILIO_PHONE_NUMBER),
   };
 }
 

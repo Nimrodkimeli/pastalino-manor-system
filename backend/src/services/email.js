@@ -1,7 +1,15 @@
 const nodemailer = require("nodemailer");
 
+function envValue(name) {
+  return String(process.env[name] || "").trim();
+}
+
+function smtpPassword() {
+  return envValue("SMTP_PASS").replace(/\s+/g, "");
+}
+
 function hasSmtpConfig() {
-  return Boolean(process.env.SMTP_HOST && process.env.SMTP_PORT && process.env.SMTP_USER && process.env.SMTP_PASS);
+  return Boolean(envValue("SMTP_HOST") && envValue("SMTP_PORT") && envValue("SMTP_USER") && smtpPassword());
 }
 
 function createTransport() {
@@ -10,12 +18,12 @@ function createTransport() {
   }
 
   return nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: String(process.env.SMTP_SECURE || "false").toLowerCase() === "true",
+    host: envValue("SMTP_HOST"),
+    port: Number(envValue("SMTP_PORT")),
+    secure: String(envValue("SMTP_SECURE") || "false").toLowerCase() === "true",
     auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      user: envValue("SMTP_USER"),
+      pass: smtpPassword(),
     },
   });
 }
@@ -23,10 +31,10 @@ function createTransport() {
 function getSmtpProviderStatus() {
   return {
     configured: hasSmtpConfig(),
-    host: process.env.SMTP_HOST || "",
-    port: process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : null,
-    secure: String(process.env.SMTP_SECURE || "false").toLowerCase() === "true",
-    from: process.env.SMTP_FROM || process.env.SMTP_USER || "",
+    host: envValue("SMTP_HOST"),
+    port: envValue("SMTP_PORT") ? Number(envValue("SMTP_PORT")) : null,
+    secure: String(envValue("SMTP_SECURE") || "false").toLowerCase() === "true",
+    from: envValue("SMTP_FROM") || envValue("SMTP_USER") || "",
   };
 }
 
@@ -51,7 +59,7 @@ async function sendMailMessage({ to, subject, text }) {
     return { success: false, reason: "SMTP_NOT_CONFIGURED", channel: "email", to };
   }
 
-  const from = process.env.SMTP_FROM || process.env.SMTP_USER;
+  const from = envValue("SMTP_FROM") || envValue("SMTP_USER");
   const info = await transport.sendMail({
     from,
     to,
