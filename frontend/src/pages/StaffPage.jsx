@@ -17,6 +17,8 @@ import {
   Select,
   MenuItem,
   Alert,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
 import api from "../api";
 import { getSession } from "../api";
@@ -41,6 +43,10 @@ export default function StaffPage() {
   const [notificationTestPhone, setNotificationTestPhone] = useState("");
   const [notificationTestStatus, setNotificationTestStatus] = useState(null);
   const [notificationTestLoading, setNotificationTestLoading] = useState(false);
+  const [notificationSettings, setNotificationSettings] = useState({ smsRequireOptIn: true });
+  const [notificationSettingsLoading, setNotificationSettingsLoading] = useState(false);
+  const [notificationSettingsSaving, setNotificationSettingsSaving] = useState(false);
+  const [notificationSettingsStatus, setNotificationSettingsStatus] = useState(null);
   const [resendStatus, setResendStatus] = useState(null);
   const [resendingStaffId, setResendingStaffId] = useState("");
   const [staffCreateForm, setStaffCreateForm] = useState({
@@ -63,6 +69,32 @@ export default function StaffPage() {
 
     loadData();
   }, []);
+
+  useEffect(() => {
+    if (!isAdmin) {
+      return;
+    }
+
+    const loadSettings = async () => {
+      setNotificationSettingsLoading(true);
+      setNotificationSettingsStatus(null);
+      try {
+        const response = await api.get("/staff/notification-settings");
+        setNotificationSettings({
+          smsRequireOptIn: Boolean(response.data?.smsRequireOptIn),
+        });
+      } catch (error) {
+        setNotificationSettingsStatus({
+          severity: "error",
+          message: error?.response?.data?.message || "Unable to load notification settings.",
+        });
+      } finally {
+        setNotificationSettingsLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!selectedStaffId) {
@@ -201,6 +233,35 @@ export default function StaffPage() {
     }
   };
 
+  const handleSaveNotificationSettings = async () => {
+    if (!isAdmin) {
+      return;
+    }
+
+    setNotificationSettingsSaving(true);
+    setNotificationSettingsStatus(null);
+    try {
+      const response = await api.put("/staff/notification-settings", {
+        smsRequireOptIn: Boolean(notificationSettings.smsRequireOptIn),
+      });
+
+      setNotificationSettings({
+        smsRequireOptIn: Boolean(response.data?.smsRequireOptIn),
+      });
+      setNotificationSettingsStatus({
+        severity: "success",
+        message: response.data?.message || "Notification settings updated.",
+      });
+    } catch (error) {
+      setNotificationSettingsStatus({
+        severity: "error",
+        message: error?.response?.data?.message || "Unable to update notification settings.",
+      });
+    } finally {
+      setNotificationSettingsSaving(false);
+    }
+  };
+
   const handleResendTemporaryPassword = async (staffMember) => {
     if (!isAdmin) {
       return;
@@ -232,6 +293,34 @@ export default function StaffPage() {
       <Typography variant="h4" mb={3}>
         Staff Compliance Center
       </Typography>
+
+      {isAdmin && (
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Typography variant="h6" mb={2}>Notification Settings</Typography>
+          <Stack spacing={2}>
+            <FormControlLabel
+              control={(
+                <Switch
+                  checked={Boolean(notificationSettings.smsRequireOptIn)}
+                  onChange={(event) => setNotificationSettings((prev) => ({ ...prev, smsRequireOptIn: event.target.checked }))}
+                />
+              )}
+              label="Require SMS opt-in before sending text notifications"
+            />
+            <Typography variant="body2" color="text.secondary">
+              Turn this on to enforce START/YES opt-in before SMS is sent. Turn it off to allow immediate SMS sends.
+            </Typography>
+            <Button variant="contained" onClick={handleSaveNotificationSettings} disabled={notificationSettingsLoading || notificationSettingsSaving}>
+              {notificationSettingsSaving ? "Saving..." : "Save Notification Settings"}
+            </Button>
+            {notificationSettingsStatus && (
+              <Alert severity={notificationSettingsStatus.severity}>
+                {notificationSettingsStatus.message}
+              </Alert>
+            )}
+          </Stack>
+        </Paper>
+      )}
 
       {isAdmin && (
         <Paper sx={{ p: 2, mb: 3 }}>

@@ -121,6 +121,36 @@ router.post(
   }
 );
 
+router.get("/notification-settings", authorizeAdmin, async (req, res) => {
+  const smsRequireOptIn = String(process.env.SMS_REQUIRE_OPT_IN || "true").toLowerCase() !== "false";
+
+  res.json({
+    smsRequireOptIn,
+    providers: getNotificationProviderStatus(),
+  });
+});
+
+router.put(
+  "/notification-settings",
+  authorizeAdmin,
+  [body("smsRequireOptIn").isBoolean()],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const smsRequireOptIn = Boolean(req.body.smsRequireOptIn);
+    process.env.SMS_REQUIRE_OPT_IN = smsRequireOptIn ? "true" : "false";
+
+    return res.json({
+      message: `SMS opt-in enforcement ${smsRequireOptIn ? "enabled" : "disabled"}.`,
+      smsRequireOptIn,
+      providers: getNotificationProviderStatus(),
+    });
+  }
+);
+
 router.get("/:id", async (req, res) => {
   const profile = await get(
     `SELECT u.id, u.name, u.email, sp.title, sp.department, sp.phone,
