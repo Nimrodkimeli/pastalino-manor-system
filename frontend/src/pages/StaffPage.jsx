@@ -37,6 +37,12 @@ export default function StaffPage() {
   const [isUploading, setIsUploading] = useState(false);
   const [staffCreateMessage, setStaffCreateMessage] = useState("");
   const [staffTemporaryPassword, setStaffTemporaryPassword] = useState("");
+  const [notificationTestEmail, setNotificationTestEmail] = useState("");
+  const [notificationTestPhone, setNotificationTestPhone] = useState("");
+  const [notificationTestStatus, setNotificationTestStatus] = useState(null);
+  const [notificationTestLoading, setNotificationTestLoading] = useState(false);
+  const [resendStatus, setResendStatus] = useState(null);
+  const [resendingStaffId, setResendingStaffId] = useState("");
   const [staffCreateForm, setStaffCreateForm] = useState({
     name: "",
     email: "",
@@ -156,6 +162,71 @@ export default function StaffPage() {
     }
   };
 
+  const handleSendNotificationTest = async () => {
+    if (!isAdmin) {
+      return;
+    }
+
+    setNotificationTestLoading(true);
+    setNotificationTestStatus(null);
+    try {
+      const response = await api.post("/staff/notification-test", {
+        email: notificationTestEmail.trim(),
+        phone: notificationTestPhone.trim(),
+      });
+
+      const emailVerification = response.data?.verification?.email;
+      const smsVerification = response.data?.verification?.sms;
+      const testResults = Array.isArray(response.data?.results) ? response.data.results : [];
+      const failedResults = testResults.filter((result) => result.success === false && !result.skipped);
+      const verificationFailed = (emailVerification && emailVerification.success === false) || (smsVerification && smsVerification.success === false);
+
+      setNotificationTestStatus({
+        severity: failedResults.length || verificationFailed ? "warning" : "success",
+        message: testResults.map((result) => {
+          const target = result.to ? ` to ${result.to}` : "";
+          if (result.success) {
+            return `${String(result.channel || "notification").toUpperCase()} sent${target}.`;
+          }
+          return `${String(result.channel || "notification").toUpperCase()} ${result.skipped ? "skipped" : "failed"}${target}: ${result.reason || "Unknown reason"}`;
+        }).join(" "),
+      });
+    } catch (error) {
+      setNotificationTestStatus({
+        severity: "error",
+        message: error?.response?.data?.message || "Unable to send notification test.",
+      });
+    } finally {
+      setNotificationTestLoading(false);
+    }
+  };
+
+  const handleResendTemporaryPassword = async (staffMember) => {
+    if (!isAdmin) {
+      return;
+    }
+
+    setResendingStaffId(staffMember.id);
+    setResendStatus(null);
+    try {
+      const response = await api.post(`/staff/${staffMember.id}/resend-temporary-password`);
+      const returnedPassword = response.data?.temporaryPassword;
+      setResendStatus({
+        severity: returnedPassword ? "warning" : "success",
+        message: returnedPassword
+          ? `${response.data?.message || "Temporary password reset."} Temporary password: ${returnedPassword}`
+          : (response.data?.message || "Temporary password email resent successfully."),
+      });
+    } catch (error) {
+      setResendStatus({
+        severity: "error",
+        message: error?.response?.data?.message || "Unable to resend temporary password.",
+      });
+    } finally {
+      setResendingStaffId("");
+    }
+  };
+
   return (
     <Box>
       <Typography variant="h4" mb={3}>
@@ -182,6 +253,36 @@ export default function StaffPage() {
             {staffTemporaryPassword && (
               <Alert severity="warning">
                 SMTP is not configured. Share this temporary password securely with staff: {staffTemporaryPassword}
+              </Alert>
+            )}
+          </Stack>
+        </Paper>
+      )}
+
+      {isAdmin && (
+        <Paper sx={{ p: 2, mb: 3 }}>
+          <Typography variant="h6" mb={2}>Test Message and Email Notifications</Typography>
+          <Stack spacing={2}>
+            <TextField
+              label="Test email"
+              value={notificationTestEmail}
+              onChange={(event) => setNotificationTestEmail(event.target.value)}
+              fullWidth
+              helperText="Leave blank to use TEST_NOTIFICATION_EMAIL from backend environment."
+            />
+            <TextField
+              label="Test phone"
+              value={notificationTestPhone}
+              onChange={(event) => setNotificationTestPhone(event.target.value)}
+              fullWidth
+              helperText="Leave blank to use TEST_NOTIFICATION_PHONE from backend environment."
+            />
+            <Button variant="contained" onClick={handleSendNotificationTest} disabled={notificationTestLoading}>
+              {notificationTestLoading ? "Sending Test..." : "Send Test Notifications"}
+            </Button>
+            {notificationTestStatus && (
+              <Alert severity={notificationTestStatus.severity}>
+                {notificationTestStatus.message}
               </Alert>
             )}
           </Stack>
@@ -273,6 +374,11 @@ export default function StaffPage() {
 
       <Paper sx={{ p: 2, mb: 3 }}>
         <Typography variant="h6" mb={2}>Required credentials and renewals</Typography>
+        {resendStatus && (
+          <Alert severity={resendStatus.severity} sx={{ mb: 2 }}>
+            {resendStatus.message}
+          </Alert>
+        )}
         <Table>
           <TableHead>
             <TableRow>
@@ -281,6 +387,7 @@ export default function StaffPage() {
               <TableCell>Title</TableCell>
               <TableCell>Department</TableCell>
               <TableCell>Credentials</TableCell>
+              {isAdmin && <TableCell align="right">Actions</TableCell>}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -302,6 +409,18 @@ export default function StaffPage() {
                     ))}
                   </Stack>
                 </TableCell>
+                {isAdmin && (
+                  <TableCell align="right">
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => handleResendTemporaryPassword(item)}
+                      disabled={resendingStaffId === item.id}
+                    >
+                      {resendingStaffId === item.id ? "Sending..." : "Resend Temp Email"}
+                    </Button>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>
