@@ -18,6 +18,7 @@ const appointmentRoutes = require("./routes/appointments");
 const policyRoutes = require("./routes/policies");
 const visitorRoutes = require("./routes/visitors");
 const fireDrillRoutes = require("./routes/fireDrills");
+const notificationWebhookRoutes = require("./routes/notifications");
 const { startReminderScheduler } = require("./services/reminderScheduler");
 const initData = require("./utils/initData");
 
@@ -64,6 +65,7 @@ app.use("/api/appointments", appointmentRoutes);
 app.use("/api/policies", policyRoutes);
 app.use("/api/visitors", visitorRoutes);
 app.use("/api/fire-drills", fireDrillRoutes);
+app.use("/api/notifications", notificationWebhookRoutes);
 
 app.get("/api/status", (req, res) => res.json({ status: "ok", version: "1.0" }));
 

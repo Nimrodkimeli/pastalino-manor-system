@@ -253,6 +253,28 @@ async function createTables() {
       createdAt INTEGER NOT NULL
     )`
   );
+
+  await run(
+    `CREATE TABLE IF NOT EXISTS sms_consent (
+      phoneNumber TEXT PRIMARY KEY,
+      consentStatus TEXT NOT NULL DEFAULT 'unknown',
+      consentSource TEXT,
+      lastKeyword TEXT,
+      updatedAt INTEGER NOT NULL
+    )`
+  );
+
+  await run(
+    `CREATE TABLE IF NOT EXISTS sms_inbound_events (
+      id TEXT PRIMARY KEY,
+      fromPhone TEXT NOT NULL,
+      toPhone TEXT,
+      body TEXT,
+      keywordType TEXT,
+      keyword TEXT,
+      createdAt INTEGER NOT NULL
+    )`
+  );
 }
 
 async function seedInitialData() {

@@ -2,30 +2,14 @@ const fs = require("fs");
 const path = require("path");
 const twilio = require("twilio");
 const { getSmtpProviderStatus, sendMailMessage } = require("./email");
+const {
+  canSendSmsTo,
+  normalizePhoneNumber,
+  shouldRequireOptIn,
+} = require("./smsConsent");
 
 const logDirectory = path.join(__dirname, "..", "..", "data");
 const logFile = path.join(logDirectory, "notification.log");
-
-function normalizePhoneNumber(value) {
-  const rawValue = String(value || "").trim();
-  if (!rawValue) {
-    return "";
-  }
-
-  if (rawValue.startsWith("+")) {
-    return rawValue;
-  }
-
-  const digits = rawValue.replace(/\D/g, "");
-  if (digits.length === 10) {
-    return `+1${digits}`;
-  }
-  if (digits.length === 11 && digits.startsWith("1")) {
-    return `+${digits}`;
-  }
-
-  return rawValue;
-}
 
 function hasTwilioConfig() {
   return Boolean(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER);
@@ -64,7 +48,7 @@ async function sendEmailNotification({ to, subject, body }) {
   return result;
 }
 
-async function sendSmsNotification({ to, message }) {
+async function sendSmsNotification({ to, message, ignoreConsent = false }) {
   const client = createTwilioClient();
   if (!client) {
     const entry = `SMS fallback to=${to} reason=TWILIO_NOT_CONFIGURED message=${message}`;
@@ -73,19 +57,35 @@ async function sendSmsNotification({ to, message }) {
     return { success: false, channel: "sms", to, reason: "TWILIO_NOT_CONFIGURED" };
   }
 
+  const normalizedTo = normalizePhoneNumber(to);
+  if (!ignoreConsent) {
+    const consentCheck = await canSendSmsTo(normalizedTo);
+    if (!consentCheck.allowed) {
+      const entry = `SMS blocked to=${normalizedTo} reason=${consentCheck.reason}`;
+      console.log(entry);
+      await logNotification(entry);
+      return {
+        success: false,
+        channel: "sms",
+        to: normalizedTo,
+        reason: consentCheck.reason,
+      };
+    }
+  }
+
   const response = await client.messages.create({
-    to: normalizePhoneNumber(to),
+    to: normalizedTo,
     from: normalizePhoneNumber(process.env.TWILIO_PHONE_NUMBER),
     body: message,
   });
 
-  const entry = `SMS provider=twilio to=${to} sid=${response.sid}`;
+  const entry = `SMS provider=twilio to=${normalizedTo} sid=${response.sid}`;
   console.log(entry);
   await logNotification(entry);
   return {
     success: true,
     channel: "sms",
-    to,
+    to: normalizedTo,
     provider: "twilio",
     providerId: response.sid,
   };
@@ -107,6 +107,7 @@ function getNotificationProviderStatus() {
       configured: twilioConfigured,
       from: normalizePhoneNumber(process.env.TWILIO_PHONE_NUMBER),
       mode: twilioConfigured ? "twilio" : "log-fallback",
+      requiresOptIn: shouldRequireOptIn(),
       summary: twilioConfigured
         ? `Twilio SMS from ${normalizePhoneNumber(process.env.TWILIO_PHONE_NUMBER)}`
         : "Writes SMS reminders to notification.log",

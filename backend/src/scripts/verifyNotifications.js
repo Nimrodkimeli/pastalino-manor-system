@@ -1,4 +1,8 @@
-require("dotenv").config({ override: true });
+const path = require("path");
+require("dotenv").config({
+  path: path.join(__dirname, "..", "..", ".env"),
+  override: true,
+});
 
 const { sendMailMessage, verifySmtpConnection } = require("../services/email");
 const {
@@ -22,6 +26,27 @@ function buildTestMessage() {
 function isTwilioBlockedDestination(error) {
   const message = String(error?.message || error || "").toLowerCase();
   return message.includes("verified recipient") || message.includes("trial phone number") || message.includes("not assigned for messaging");
+}
+
+function normalizePhoneNumber(value) {
+  const rawValue = String(value || "").trim();
+  if (!rawValue) {
+    return "";
+  }
+
+  if (rawValue.startsWith("+")) {
+    return rawValue;
+  }
+
+  const digits = rawValue.replace(/\D/g, "");
+  if (digits.length === 10) {
+    return `+1${digits}`;
+  }
+  if (digits.length === 11 && digits.startsWith("1")) {
+    return `+${digits}`;
+  }
+
+  return rawValue;
 }
 
 async function sendSafeTests() {
@@ -55,10 +80,25 @@ async function sendSafeTests() {
   }
 
   if (process.env.TEST_NOTIFICATION_PHONE) {
+    const targetPhone = normalizePhoneNumber(process.env.TEST_NOTIFICATION_PHONE);
+    const senderPhone = normalizePhoneNumber(process.env.TWILIO_PHONE_NUMBER);
+
+    if (targetPhone && senderPhone && targetPhone === senderPhone) {
+      results.push({
+        success: false,
+        channel: "sms",
+        to: targetPhone,
+        skipped: true,
+        reason: "TEST_PHONE_MATCHES_TWILIO_SENDER",
+        detail: "Set TEST_NOTIFICATION_PHONE to a different, real recipient number.",
+      });
+      return results;
+    }
+
     try {
       results.push(
         await sendSmsNotification({
-          to: process.env.TEST_NOTIFICATION_PHONE,
+          to: targetPhone,
           message: text,
         })
       );
