@@ -89,6 +89,7 @@ async function createTables() {
       status TEXT NOT NULL DEFAULT 'current'
     )`
   );
+  await ensureColumn("documents", "lastReminderSentAt", "INTEGER");
 
   await run(
     `CREATE TABLE IF NOT EXISTS notes (
@@ -185,6 +186,7 @@ async function createTables() {
       updatedAt INTEGER NOT NULL
     )`
   );
+  await ensureColumn("staff_compliance_items", "lastReminderSentAt", "INTEGER");
 
   await run(
     `CREATE TABLE IF NOT EXISTS incidents (

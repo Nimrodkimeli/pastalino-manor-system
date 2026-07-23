@@ -1,4 +1,5 @@
 const { sendDueAppointmentReminders } = require("./appointmentReminders");
+const { isExpiryReminderEnabled, sendDueExpiryReminders } = require("./expiryReminders");
 
 let schedulerTimer = null;
 let schedulerRunning = false;
@@ -23,10 +24,21 @@ async function runSchedulerCycle() {
   lastRunAt = Date.now();
 
   try {
-    lastResult = await sendDueAppointmentReminders();
+    const appointment = await sendDueAppointmentReminders();
+    const expiry = isExpiryReminderEnabled()
+      ? await sendDueExpiryReminders()
+      : { total: 0, sent: 0, results: [], disabled: true };
+
+    lastResult = {
+      appointment,
+      expiry,
+      total: Number(appointment.total || 0) + Number(expiry.total || 0),
+      sent: Number(appointment.sent || 0) + Number(expiry.sent || 0),
+    };
+
     if (lastResult.sent || lastResult.total) {
       console.log(
-        `[appointment-reminders] processed due=${lastResult.total} sent=${lastResult.sent}`
+        `[reminder-scheduler] processed total=${lastResult.total} sent=${lastResult.sent} appointmentDue=${appointment.total || 0} expiryDue=${expiry.total || 0}`
       );
     }
     return lastResult;
@@ -53,7 +65,7 @@ function startReminderScheduler() {
   }
 
   console.log(
-    `[appointment-reminders] scheduler started intervalMinutes=${Number(process.env.APPOINTMENT_REMINDER_INTERVAL_MINUTES || 5)}`
+    `[reminder-scheduler] scheduler started intervalMinutes=${Number(process.env.APPOINTMENT_REMINDER_INTERVAL_MINUTES || 5)}`
   );
 
   runSchedulerCycle();
